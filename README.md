@@ -2,18 +2,16 @@ A fork of a python regex implementation, for the purpose of doing regular path q
 
 Code currently organized in a basic "C"-style form: a collection of functions to be used interactively or with simple scripts to run experiments.
 
-Main functions of interest (see comments in RPQ.py for details)
+### Main functions of interest (see comments in RPQ.py for details)
 
--loadgraph = load a graph from file
--runquery = run a given single-source query on a graph
--runMSquery = same for multi-source queries (somewhat naive implementation)
--singlesource/multisource = scripts to load graph data and queries from files, parse and run all queries and output results to file.
+*loadgraph = load a graph from file
+*runquery = run a given single-source query on a graph
+*runMSquery = same for multi-source queries (somewhat naive implementation)
+*singlesource/multisource = scripts to load graph data and queries from files, parse and run all queries and output results to file.
+*parseRPQRes.py contains some code to parse query result files and do some simple ad-hoc analysis.
 
--parseRPQRes.py contains some code to parse query result files and do some simple ad-hoc analysis.
 
-
-The description of the original regex project is below
------------------------------
+### The description of the original regex project is below
 
 A regex engine in Python following Thompson's Algorithm. This will perform significantly better than the backtracking approach implemented in Python's `re` module on some pathological patterns. 
 

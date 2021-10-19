@@ -35,7 +35,7 @@ class Lexer:
                     newtoken += c
                     c = self.source[self.current]
                     self.current += 1
-                    #TODO: check that token was well formed (ended with '>'
+                    #TODO: check that token was well formed (ended with '>')
                 token = Token('CHAR', newtoken)
             else:
                 token = Token(self.symbols[c], c)
@@ -136,19 +136,19 @@ class NFA:
         visited, queue = set(), [self.start]
         while queue:
             vertex = queue.pop(0)
-            print "v:", vertex.name
+            print ("v: "+ vertex.name)
             if vertex not in visited:
                 visited.add(vertex)
                 transitions = set()
                 for k in vertex.transitions.keys():
                     trans =vertex.transitions[k]
-                    print "-",k, '->', trans.name
+                    print ("-" + k + '->'+ trans.name)
                     if trans not in visited:
                         transitions.add(trans)
                     
                 transitions.update(vertex.epsilon)
                 for eps in vertex.epsilon:
-                    print "-eps->", eps.name
+                    print ("-eps->" + eps.name)
                     
                 queue.extend([s for s in transitions if s not in visited])
                             
@@ -212,6 +212,7 @@ class Handler:
     def handle_concat(self, t, nfa_stack):
         n2 = nfa_stack.pop()
         n1 = nfa_stack.pop()
+        
         n1.end.is_end = False
         n1.end.epsilon.append(n2.start)
         nfa = NFA(n1.start, n2.end)
@@ -220,15 +221,30 @@ class Handler:
     def handle_alt(self, t, nfa_stack):
         n2 = nfa_stack.pop()
         n1 = nfa_stack.pop()
-        s0 = self.create_state()
-        s0.epsilon = [n1.start, n2.start]
-        s3 = self.create_state()
-        n1.end.epsilon.append(s3)
-        n2.end.epsilon.append(s3)
-        n1.end.is_end = False
-        n2.end.is_end = False
-        nfa = NFA(s0, s3)
-        nfa_stack.append(nfa)
+        ################################ debug
+        #print "alternating! n1: len=", n1.size()
+        #n1.uglyprint()
+        #print "-------------- n2: len=", n2.size()        
+        #n2.uglyprint()
+        ############################3
+        #special case where it's just (a|b) or (a?|b?) [nfa sizes ==2]
+        if (n1.size()==2 and n2.size() ==2 and len(n2.end.transitions)==0): #just a possibly overkill check that n2 end state has no outgoing transitions
+            #copy transitions of n2 to n1
+            for sym in n2.start.transitions.keys(): 
+                n1.start.transitions[sym] = n1.end #all transitions necessarily go to end state
+            if n2.end in n2.start.epsilon:
+                n1.start.epsilon.append(n1.end)                    
+            nfa_stack.append(n1)
+        else:
+            s0 = self.create_state()
+            s0.epsilon = [n1.start, n2.start]
+            s3 = self.create_state()
+            n1.end.epsilon.append(s3)
+            n2.end.epsilon.append(s3)
+            n1.end.is_end = False
+            n2.end.is_end = False
+            nfa = NFA(s0, s3)
+            nfa_stack.append(nfa)
     
     def handle_rep(self, t, nfa_stack):
         n1 = nfa_stack.pop()

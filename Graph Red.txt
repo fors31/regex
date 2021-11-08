@@ -1,0 +1,8 @@
+red:2 red:6 a
+red:2 green:5 a
+red:2 red:3 c
+red:3 green:5 a
+red:3 blue:8 b
+red:6 blue:8 c
+red:6 blue:9 a
+red:6 red:12 b

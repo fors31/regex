@@ -16,7 +16,7 @@ class Token:
 class Lexer:
     def __init__(self, pattern):
         self.source = pattern
-        self.symbols = {'(':'LEFT_PAREN', ')':'RIGHT_PAREN', '*':'STAR', '|':'ALT', '\x08':'CONCAT', '+':'PLUS', '?':'QMARK'}
+        self.symbols = {'(':'LEFT_PAREN', ')':'RIGHT_PAREN', '*':'STAR', '|':'ALT', '\x08':'CONCAT', '+':'PLUS', '?':'QMARK', '<':'LT', '>':'GT'} #extended with <>: this way <blabla> is taken to be a single char token
         self.current = 0
         self.length = len(self.source)
        
@@ -26,6 +26,17 @@ class Lexer:
             self.current += 1
             if c not in self.symbols.keys(): # CHAR
                 token = Token('CHAR', c)
+            elif c=='<':
+                #get a string as one token
+                c = self.source[self.current]
+                self.current += 1                
+                newtoken =""
+                while (c!='>') and (self.current < self.length): #until we hit the end of pattern or else the end token symbol
+                    newtoken += c
+                    c = self.source[self.current]
+                    self.current += 1
+                    #TODO: check that token was well formed (ended with '>')
+                token = Token('CHAR', newtoken)
             else:
                 token = Token(self.symbols[c], c)
             return token
@@ -53,6 +64,7 @@ factor   = primary [*]       star {push '*'}
 
 primary  = \( exp \)
          | char              literal {push char}
+         | <<char*>>         literal {push <<chars>>}
 '''
 
 class Parser:
@@ -120,6 +132,28 @@ class NFA:
         for eps in state.epsilon:
             self.addstate(eps, state_set)
     
+    def uglyprint(self):
+        visited, queue = set(), [self.start]
+        while queue:
+            vertex = queue.pop(0)
+            print ("v: "+ vertex.name)
+            if vertex not in visited:
+                visited.add(vertex)
+                transitions = set()
+                for k in vertex.transitions.keys():
+                    trans =vertex.transitions[k]
+                    print ("-" + k + '->'+ trans.name)
+                    if trans not in visited:
+                        transitions.add(trans)
+                    
+                transitions.update(vertex.epsilon)
+                for eps in vertex.epsilon:
+                    print ("-eps->" + eps.name)
+                    
+                queue.extend([s for s in transitions if s not in visited])
+                            
+        #return len(visited) #set of graph nodes in terminal nodes of product automaton; list of visited nodes                
+        
     def pretty_print(self):
         '''
         print using Graphviz
@@ -143,7 +177,20 @@ class NFA:
             if s.is_end:
                 return True
         return False
-
+    
+    def size(self):
+        visited, queue = set(), [self.start]
+        while queue:
+            vertex = queue.pop(0)
+            if vertex not in visited:
+                visited.add(vertex)
+                transitions = vertex.transitions.values()
+                transitions.extend(vertex.epsilon)
+                queue.extend([s for s in transitions if s not in visited])
+                    
+        return len(visited) #size of automaton        
+        
+        
 class Handler:
     def __init__(self):
         self.handlers = {'CHAR':self.handle_char, 'CONCAT':self.handle_concat,
@@ -165,6 +212,7 @@ class Handler:
     def handle_concat(self, t, nfa_stack):
         n2 = nfa_stack.pop()
         n1 = nfa_stack.pop()
+        
         n1.end.is_end = False
         n1.end.epsilon.append(n2.start)
         nfa = NFA(n1.start, n2.end)
@@ -173,15 +221,30 @@ class Handler:
     def handle_alt(self, t, nfa_stack):
         n2 = nfa_stack.pop()
         n1 = nfa_stack.pop()
-        s0 = self.create_state()
-        s0.epsilon = [n1.start, n2.start]
-        s3 = self.create_state()
-        n1.end.epsilon.append(s3)
-        n2.end.epsilon.append(s3)
-        n1.end.is_end = False
-        n2.end.is_end = False
-        nfa = NFA(s0, s3)
-        nfa_stack.append(nfa)
+        ################################ debug
+        #print "alternating! n1: len=", n1.size()
+        #n1.uglyprint()
+        #print "-------------- n2: len=", n2.size()        
+        #n2.uglyprint()
+        ############################3
+        #special case where it's just (a|b) or (a?|b?) [nfa sizes ==2]
+        if (n1.size()==2 and n2.size() ==2 and len(n2.end.transitions)==0): #just a possibly overkill check that n2 end state has no outgoing transitions
+            #copy transitions of n2 to n1
+            for sym in n2.start.transitions.keys(): 
+                n1.start.transitions[sym] = n1.end #all transitions necessarily go to end state
+            if n2.end in n2.start.epsilon:
+                n1.start.epsilon.append(n1.end)                    
+            nfa_stack.append(n1)
+        else:
+            s0 = self.create_state()
+            s0.epsilon = [n1.start, n2.start]
+            s3 = self.create_state()
+            n1.end.epsilon.append(s3)
+            n2.end.epsilon.append(s3)
+            n1.end.is_end = False
+            n2.end.is_end = False
+            nfa = NFA(s0, s3)
+            nfa_stack.append(nfa)
     
     def handle_rep(self, t, nfa_stack):
         n1 = nfa_stack.pop()

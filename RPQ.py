@@ -381,7 +381,7 @@ def runquery (graph, startnode, regex):
     returns answers + set of visited nodes in the graph
     '''
     NFA = compile(regex)
-    print ("starting...")
+    #print ("starting...")
     return bfs(graph,NFA,startnode)
 
 def runMSquery(graph,regex): #note: out of date doesn't handle broadcasts and edgelist

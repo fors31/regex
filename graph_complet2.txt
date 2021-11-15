@@ -1,0 +1,17 @@
+blue:1 blue:4 a
+blue:4 green:7 b
+blue:4 blue:3 b
+blue:3 blue:2 c
+blue:2 blue:1 e
+blue:3 blue:5 b
+blue:6 blue:5 d
+blue:5 green:10 b
+green:7 green:8 c
+green:8 green:9 d
+green:9 green:10 e
+green:7 green:10 e
+green:10 red:12 b
+red:12 red:11 b
+red:11 blue:6 c
+
+

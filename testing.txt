@@ -1,0 +1,6 @@
+blue:1 green:7 r1
+blue:1 green:10 r1
+green:10 red:12 r4
+red:12 blue:6 r5
+green:7 green:9 r6
+blue:6 blue:5 r7

@@ -3,24 +3,9 @@ from parse import NFA, State
 import re
 
 
-def get_incoming_nodes(local_name, local_file, external_name, external_file):
-    gin = loadgraph(local_file)
-    #gout = loadgraph(external_file)
-    node_in = local_name.lower()
-    node_ext = external_name.lower()
-    nodes = []
-    for val in external_file:
-        if val.split(":")[0] != node_in:
-            continue
-        else:
-            if val.split(":")[0].lower() == node_in:
-                nodes.append(node_ext + " " + val)
-    return nodes
-
-
-def get_outgoing_nodes( filename):
+def get_outgoing_nodes(filename):
     g = loadgraph(filename)
-    domain_name = list(g.keys())[0].split(":")[0]  # use the first node in the file to get the domain
+    domain_name = list(g.keys())[0].split(":")[0]
     nodes_out = set()
     node_in = domain_name.lower()
     for key in g.keys():
@@ -92,6 +77,7 @@ def get_data_graph(graph_list, origin_er, outnodes):
         new_graph.setdefault(not_filtered_node, [])
     return new_graph
 
+
 def get_all_out_nodes(list_of_graph):
     '''
     Use a list of filenames (graphs) to get all the outgoing nodes
@@ -109,16 +95,15 @@ def expand_re(er):
     TODO: automate the process
     Uses a regular expression in a format like <a><b>*<c> and decomposes it
     :param re: regular expression to decompose
-    :return: a dict of rule : (start state, end state, regular expression)
+    :return: a dict of rule : regular expression
     '''
-    er_expanded = {"r1": (0, 1, "<a><b>*"),
-                   "r2": (0, 2, "<a><b>*<c>"),
-                   "r3": (0, 3, "<a><b>*<c><d>"),
-                   "r4": (1, 1, "<b>+"),
-                   "r5": (1, 2, "<b>*<c>"),
-                   "r6": (0, 3, "<b>*<c><d>"),
-                   "r7": (2, 3, "<d>")}
+    er_expanded = {"r1": "<a>+",       # 0-0
+                   "r2": "<a>*<b>",    # 0-1
+                   "r3": "<a>*<b><b>", # 0-2
+                   "r4": "<b>"         # 1-2
+                   }
     return er_expanded
+
 
 def filter_branch(er):
     '''
@@ -131,42 +116,39 @@ def filter_branch(er):
     return "<"+filt[len(filt)-1]+">"
 
 
-er = "<a><b>*<c><d>"
+'''----------------------------------------'''
+'''Testing another graph'''
+
+g1 = loadgraph("papergraph_SW.txt")
+gblue1 = loadgraph("Graph Blue.txt")
+ggreen1 = loadgraph("Graph Green.txt")
+gred1 = loadgraph("Graph Red.txt")
+graph_filenames1 = ["Graph Blue.txt", "Graph Green.txt", "Graph Red.txt"]
+outnodes1 = get_all_out_nodes(graph_filenames1)
+outnodes1.add("green:1")
+graph_list1 = [gblue1, ggreen1, gred1]
+
+er = "<a>*<b><b>"
 filtered_er = filter_branch(er)
 
-graph_filenames = ["graph_blue_2.txt","graph_green_2.txt", "graph_red_2.txt"]
+resultat1 = get_data_graph(graph_list1, er, outnodes1)
 
-g = loadgraph("graph_complet2.txt")
-gblue = loadgraph("graph_blue_2.txt")
-ggreen = loadgraph("graph_green_2.txt")
-gred = loadgraph("graph_red_2.txt")
-outnodes = get_all_out_nodes(graph_filenames)
-outnodes.add("blue:1")
-graph_list = [gblue, ggreen, gred]
+State01 = State("0")
+State11 = State("1")
+State21 = State("2")
+State01.transitions = {"r1": State01, "r2": State11, "r3": State21}
+State11.transitions = {"r4": State21}
+State21.is_end = True
+NFA11 = NFA(State01, State21)
+NFA11.addstate(State11, set())
 
+#NFA11.uglyprint()
 
-resultat = get_data_graph(graph_list, er, outnodes)
-# for key in resultat:
-# #     print(key, resultat[key])
+results1 = bfs(resultat1, NFA11, "green:1")
+print(results1[0])
 
-State0 = State("0")
-State1 = State("1")
-State2 = State("2")
-State3 = State("3")
-State0.transitions = {"r1": State1, "r2": State2, "r3": State3}
-State1.transitions = {"r4": State1, "r5": State2, "r6": State3}
-State2.transitions = {"r7": State3}
-State3.is_end = True
-NFA1 = NFA(State0, State3)
-NFA1.addstate(State1, set())
-NFA1.addstate(State2, set())
+g = loadgraph("papergraph_SW.txt") #un graphe de 12 noeuds et 20 arêtes
 
-test_graph = loadgraph("testing.txt")
-#print(test_graph)
-#print(resultat)
-# for key in test_graph:
-#     if key not in resultat:
-#         print(key)
+sol, visited, edgelist, bc = runquery(g,"green:1","<a>*<b><b>") #runquery( graphe, noeud de départ, expression regulière [attention syntaxe bizarre avec<>])
 
-results = bfs(resultat, NFA1, "blue:1")
-print(results[0])
+print(sol) # set des solutions

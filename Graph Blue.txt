@@ -1,5 +1,5 @@
 blue:7 red:6 b
-blue:8 red:7 b
+blue:8 blue:7 b
 blue:9 red:3 b
 blue:9 red:2 a
 blue:7 red:12 b

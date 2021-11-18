@@ -2,8 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="160721ce-6508-4909-9705-1f56c16571b2" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/proj_test2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/testing.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graph Blue.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Graph Blue.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Proj.py" beforeDir="false" afterPath="$PROJECT_DIR$/Proj.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/papergraph_SW.txt" beforeDir="false" afterPath="$PROJECT_DIR$/papergraph_SW.txt" afterDir="false" />
     </list>
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -13,46 +17,49 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="Proj.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Proj.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Proj.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="225">
-              <caret line="89" column="18" lean-forward="true" selection-start-line="89" selection-start-column="18" selection-end-line="89" selection-end-column="18" />
+            <state relative-caret-position="334">
+              <caret line="119" column="39" lean-forward="true" selection-start-line="119" selection-start-column="39" selection-end-line="119" selection-end-column="39" />
               <folding>
-                <element signature="e#0#35#0" expanded="true" />
+                <element signature="e#0#40#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="RPQ.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/RPQ.py">
+      <file leaf-file-name="proj_test2.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/proj_test2.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="357">
-              <caret line="21" column="20" lean-forward="true" selection-start-line="21" selection-start-column="20" selection-end-line="21" selection-end-column="20" />
+            <state relative-caret-position="408">
+              <caret line="111" column="64" lean-forward="true" selection-start-line="111" selection-start-column="64" selection-end-line="111" selection-end-column="64" />
               <folding>
-                <element signature="e#0#59#0" expanded="true" />
+                <element signature="e#0#40#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="parse.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/parse.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="238">
-              <caret line="125" column="25" lean-forward="true" selection-start-line="125" selection-start-column="25" selection-end-line="125" selection-end-column="25" />
             </state>
           </provider>
         </entry>
       </file>
     </leaf>
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
   <component name="FindInProjectRecents">
     <findStrings>
       <find>starting</find>
       <find>NFA</find>
       <find>compile</find>
+      <find>get_data_responses</find>
+      <find>print</find>
+      <find>get_all_out_nodes1</find>
+      <find>get_outgoing_nodes</find>
+      <find>expand_re</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -66,13 +73,17 @@
         <option value="$PROJECT_DIR$/graph_green2.txt" />
         <option value="$PROJECT_DIR$/graph_red2.txt" />
         <option value="$PROJECT_DIR$/RPQ.py" />
+        <option value="$PROJECT_DIR$/testing.txt" />
+        <option value="$PROJECT_DIR$/papergraph_SW.txt" />
+        <option value="$PROJECT_DIR$/Graph Blue.txt" />
         <option value="$PROJECT_DIR$/Proj.py" />
+        <option value="$PROJECT_DIR$/proj_test2.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="212" />
-    <option name="y" value="18" />
+    <option name="x" value="180" />
+    <option name="y" value="21" />
     <option name="width" value="1531" />
     <option name="height" value="973" />
   </component>
@@ -113,7 +124,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.proj_test2">
     <configuration name="Proj" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="regex" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -132,8 +143,31 @@
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
     </configuration>
+    <configuration name="proj_test2" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="regex" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/proj_test2.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.Proj" />
+      <item itemvalue="Python.proj_test2" />
+    </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.proj_test2" />
         <item itemvalue="Python.Proj" />
       </list>
     </recent_temporary>
@@ -152,7 +186,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="212" y="18" width="1531" height="973" extended-state="0" />
+    <frame x="224" y="14" width="1531" height="973" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.16543871" />
@@ -180,13 +214,6 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Graph Blue.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="5" selection-end-column="16" />
-        </state>
-      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/graph_green_2.txt">
       <provider selected="true" editor-type-id="text-editor">
@@ -240,29 +267,63 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/testing.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="4" column="18" lean-forward="true" selection-start-line="4" selection-start-column="18" selection-end-line="4" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/parse.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="125" column="25" lean-forward="true" selection-start-line="125" selection-start-column="25" selection-end-line="125" selection-end-column="25" />
+        <state relative-caret-position="323">
+          <caret line="130" column="28" lean-forward="true" selection-start-line="130" selection-start-column="28" selection-end-line="130" selection-end-column="28" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/RPQ.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="21" column="20" lean-forward="true" selection-start-line="21" selection-start-column="20" selection-end-line="21" selection-end-column="20" />
+        <state relative-caret-position="-1785">
+          <caret line="150" column="62" lean-forward="true" selection-start-line="150" selection-start-column="62" selection-end-line="150" selection-end-column="62" />
           <folding>
             <element signature="e#0#59#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Graph Green.txt">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Graph Blue.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="5" column="16" lean-forward="true" selection-start-line="5" selection-start-column="16" selection-end-line="5" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/papergraph_SW.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="19" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Proj.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="89" column="18" lean-forward="true" selection-start-line="89" selection-start-column="18" selection-end-line="89" selection-end-column="18" />
+        <state relative-caret-position="334">
+          <caret line="119" column="39" lean-forward="true" selection-start-line="119" selection-start-column="39" selection-end-line="119" selection-end-column="39" />
           <folding>
-            <element signature="e#0#35#0" expanded="true" />
+            <element signature="e#0#40#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/proj_test2.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="408">
+          <caret line="111" column="64" lean-forward="true" selection-start-line="111" selection-start-column="64" selection-end-line="111" selection-end-column="64" />
+          <folding>
+            <element signature="e#0#40#0" expanded="true" />
           </folding>
         </state>
       </provider>

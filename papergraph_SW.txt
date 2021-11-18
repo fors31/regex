@@ -13,7 +13,7 @@ red:6 blue:8 c
 red:6 blue:9 a
 red:6 red:12 b
 blue:7 red:6 b
-blue:8 red:7 b
+blue:8 blue:7 b
 blue:9 red:3 b
 blue:9 red:2 a
 blue:7 red:12 b

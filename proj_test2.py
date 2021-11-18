@@ -27,25 +27,26 @@ def get_data_responses(origin_er, graph, list_out_nodes):
     :param list_out_nodes: set of all outgoing nodes
     :return: a dict of {rule: [(origin_node, {response nodes})]}
     '''
-    filt = filter_branch(origin_er)
     data_graph = dict()
     er_list = expand_re(origin_er)
+    end_state = get_last_state(er_list)
     not_filtered = set()
     for node in graph:
         if node not in list_out_nodes:
             continue
         for er in er_list:
             data_graph.setdefault(er, [])
-            sol, visited, edgelist, bc = runquery(graph, node, er_list[er])
+            sol, visited, edgelist, bc = runquery(graph, node, er_list[er][2])
             res_nodes = set()
             for res_node in sol:
-                if res_node in list_out_nodes or filt in er_list[er]:
+                if res_node in list_out_nodes or end_state == er_list[er][1]:
                     res_nodes.add(res_node)
-                    if filt in er_list[er]:
+                    if end_state == er_list[er][1]:
                         not_filtered.add(res_node)
             if len(res_nodes) != 0:
                 data_graph[er].append((node, res_nodes))
     return data_graph, not_filtered
+
 
 def get_data_graph(graph_list, origin_er, outnodes):
     '''
@@ -58,7 +59,6 @@ def get_data_graph(graph_list, origin_er, outnodes):
     full_result, not_filtered_nodes = get_data_responses(origin_er, graph_list[0], outnodes)
     for graph in graph_list[1::]:
         partial_result, partial_not_filtered_nodes = get_data_responses(origin_er, graph, outnodes)
-        #print(partial_result)
         for not_filtered_node in partial_not_filtered_nodes:
             not_filtered_nodes.add(not_filtered_node)
         for key in partial_result:
@@ -97,23 +97,19 @@ def expand_re(er):
     :param re: regular expression to decompose
     :return: a dict of rule : regular expression
     '''
-    er_expanded = {"r1": "<a>+",       # 0-0
-                   "r2": "<a>*<b>",    # 0-1
-                   "r3": "<a>*<b><b>", # 0-2
-                   "r4": "<b>"         # 1-2
+    er_expanded = {"r1": (0, 0, "<a>+"),       # 0-0
+                   "r2": (0, 1, "<a>*<b>"),    # 0-1
+                   "r3": (0, 2, "<a>*<b><b>"), # 0-2
+                   "r4": (1, 2, "<b>")         # 1-2
                    }
     return er_expanded
 
 
-def filter_branch(er):
-    '''
-    Gets the last element of a regular expression (last branch)
-    Used to filter results
-    :param er: regular expression in a format like <a><b>*<c><d>
-    :return: a string of the last element of the regular expression
-    '''
-    filt = re.findall('<\/?(.|\s|\S)*?>', er)
-    return "<"+filt[len(filt)-1]+">"
+def get_last_state(er_expanded):
+    end = set()
+    for key in er_expanded:
+        end.add(er_expanded[key][1])
+    return max(end)
 
 
 '''----------------------------------------'''
@@ -129,7 +125,6 @@ outnodes1.add("green:1")
 graph_list1 = [gblue1, ggreen1, gred1]
 
 er = "<a>*<b><b>"
-filtered_er = filter_branch(er)
 
 resultat1 = get_data_graph(graph_list1, er, outnodes1)
 
@@ -151,4 +146,6 @@ g = loadgraph("papergraph_SW.txt") #un graphe de 12 noeuds et 20 arêtes
 
 sol, visited, edgelist, bc = runquery(g,"green:1","<a>*<b><b>") #runquery( graphe, noeud de départ, expression regulière [attention syntaxe bizarre avec<>])
 
-print(sol) # set des solutions
+#print(sol) # set des solutions
+
+#print(get_last_state(expand_re(er)))

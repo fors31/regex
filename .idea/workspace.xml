@@ -2,12 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="160721ce-6508-4909-9705-1f56c16571b2" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/proj_test2.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/testing.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graph Blue.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Graph Blue.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Proj.py" beforeDir="false" afterPath="$PROJECT_DIR$/Proj.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/papergraph_SW.txt" beforeDir="false" afterPath="$PROJECT_DIR$/papergraph_SW.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proj_test2.py" beforeDir="false" afterPath="$PROJECT_DIR$/proj_test2.py" afterDir="false" />
     </list>
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -20,8 +16,8 @@
       <file leaf-file-name="Proj.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Proj.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="334">
-              <caret line="119" column="39" lean-forward="true" selection-start-line="119" selection-start-column="39" selection-end-line="119" selection-end-column="39" />
+            <state relative-caret-position="752">
+              <caret line="174" lean-forward="true" selection-start-line="174" selection-end-line="174" />
               <folding>
                 <element signature="e#0#40#0" expanded="true" />
               </folding>
@@ -32,8 +28,8 @@
       <file leaf-file-name="proj_test2.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/proj_test2.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="408">
-              <caret line="111" column="64" lean-forward="true" selection-start-line="111" selection-start-column="64" selection-end-line="111" selection-end-column="64" />
+            <state relative-caret-position="242">
+              <caret line="131" column="20" lean-forward="true" selection-start-line="131" selection-start-column="20" selection-end-line="131" selection-end-column="20" />
               <folding>
                 <element signature="e#0#40#0" expanded="true" />
               </folding>
@@ -81,7 +77,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
+  <component name="ProjectFrameBounds" extendedState="1">
     <option name="x" value="180" />
     <option name="y" value="21" />
     <option name="width" value="1531" />
@@ -124,7 +120,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.proj_test2">
+  <component name="RunManager" selected="Python.Proj">
     <configuration name="Proj" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="regex" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -167,8 +163,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.proj_test2" />
         <item itemvalue="Python.Proj" />
+        <item itemvalue="Python.proj_test2" />
       </list>
     </recent_temporary>
   </component>
@@ -186,7 +182,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="224" y="14" width="1531" height="973" extended-state="0" />
+    <frame x="180" y="21" width="1531" height="973" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.16543871" />
@@ -310,8 +306,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Proj.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="334">
-          <caret line="119" column="39" lean-forward="true" selection-start-line="119" selection-start-column="39" selection-end-line="119" selection-end-column="39" />
+        <state relative-caret-position="752">
+          <caret line="174" lean-forward="true" selection-start-line="174" selection-end-line="174" />
           <folding>
             <element signature="e#0#40#0" expanded="true" />
           </folding>
@@ -320,8 +316,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/proj_test2.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="408">
-          <caret line="111" column="64" lean-forward="true" selection-start-line="111" selection-start-column="64" selection-end-line="111" selection-end-column="64" />
+        <state relative-caret-position="242">
+          <caret line="131" column="20" lean-forward="true" selection-start-line="131" selection-start-column="20" selection-end-line="131" selection-end-column="20" />
           <folding>
             <element signature="e#0#40#0" expanded="true" />
           </folding>

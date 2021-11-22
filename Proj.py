@@ -158,19 +158,38 @@ NFA1.addstate(State2, set())
 er_for_NFA = expand_re("<a><b>*<c><d>")
 
 def get_NFA(expanded_er):
+    '''
+    Builds an NFA using the State and NFA classes from parse.py
+    :param expanded_er: Takes a dict after being passed into the expand_re method
+    :return: an NFA object
+    '''
     states = get_last_state(expanded_er) + 1
     list_of_states = []
+    transitions = dict()
+
+    # Creates a list of all the states
     for state in range(states):
         list_of_states.append(State(str(state)))
+
+    # Get all the transitions for each state in textual form
     for er in expanded_er:
-        transitions = dict()
-        for
-        list_of_states[expanded_er[er][0]].transitions = {er: list_of_states[expanded_er[er][1]]}
+        transitions.setdefault(expanded_er[er][0], set())
+        transitions[expanded_er[er][0]].add((expanded_er[er][1], er))
+
+    # Transform into a set of transition in dict and add them to the actual state
+    for trans_state in transitions:
+        actual_transition = {}
+        for transition in transitions[trans_state]:
+            actual_transition.setdefault(transition[1], list_of_states[transition[0]])
+        list_of_states[trans_state].transitions = actual_transition
+
+    # Set start and end states
     result_NFA = NFA(list_of_states[0], list_of_states[len(list_of_states) - 1])
-    #list_of_states[len(list_of_states)-1].is_end - True
+
+    # Add all the states in between
     for inter_state in list_of_states[1:-1]:
         result_NFA.addstate(inter_state, set())
-    result_NFA.uglyprint()
+
     return result_NFA
 
 NFA_test = get_NFA(er_for_NFA)
@@ -184,6 +203,6 @@ test_graph = loadgraph("testing.txt")
 #         print(key)
 
 #print(resultat)
-results = bfs(resultat, NFA1, "blue:1")
-#print(results[0])
+results = bfs(resultat, NFA_test, "blue:1")
+print(results[0])
 

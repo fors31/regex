@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="160721ce-6508-4909-9705-1f56c16571b2" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/Proj.py" beforeDir="false" afterPath="$PROJECT_DIR$/Proj.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/proj_test2.py" beforeDir="false" afterPath="$PROJECT_DIR$/proj_test2.py" afterDir="false" />
     </list>
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -13,11 +12,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="Proj.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Proj.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Proj.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="752">
-              <caret line="174" lean-forward="true" selection-start-line="174" selection-end-line="174" />
+            <state relative-caret-position="395">
+              <caret line="169" column="31" lean-forward="true" selection-start-line="169" selection-start-column="31" selection-end-line="169" selection-end-column="31" />
               <folding>
                 <element signature="e#0#40#0" expanded="true" />
               </folding>
@@ -25,11 +24,32 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="proj_test2.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="RPQ.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/RPQ.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-2751">
+              <caret line="391" column="7" selection-start-line="391" selection-start-column="4" selection-end-line="391" selection-end-column="7" />
+              <folding>
+                <element signature="e#0#59#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="parse.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/parse.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="306">
+              <caret line="117" column="44" lean-forward="true" selection-start-line="117" selection-start-column="44" selection-end-line="117" selection-end-column="44" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="proj_test2.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/proj_test2.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="242">
-              <caret line="131" column="20" lean-forward="true" selection-start-line="131" selection-start-column="20" selection-end-line="131" selection-end-column="20" />
+            <state relative-caret-position="-680">
+              <caret line="11" column="47" lean-forward="true" selection-start-line="11" selection-start-column="47" selection-end-line="11" selection-end-column="47" />
               <folding>
                 <element signature="e#0#40#0" expanded="true" />
               </folding>
@@ -49,13 +69,14 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>starting</find>
-      <find>NFA</find>
       <find>compile</find>
       <find>get_data_responses</find>
       <find>print</find>
       <find>get_all_out_nodes1</find>
       <find>get_outgoing_nodes</find>
       <find>expand_re</find>
+      <find>transit</find>
+      <find>NFA</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -72,12 +93,12 @@
         <option value="$PROJECT_DIR$/testing.txt" />
         <option value="$PROJECT_DIR$/papergraph_SW.txt" />
         <option value="$PROJECT_DIR$/Graph Blue.txt" />
-        <option value="$PROJECT_DIR$/Proj.py" />
         <option value="$PROJECT_DIR$/proj_test2.py" />
+        <option value="$PROJECT_DIR$/Proj.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="1">
+  <component name="ProjectFrameBounds">
     <option name="x" value="180" />
     <option name="y" value="21" />
     <option name="width" value="1531" />
@@ -189,7 +210,7 @@
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" side_tool="true" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32881773" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32881773" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.33004925" />
       <window_info anchor="bottom" id="Version Control" />
       <window_info anchor="bottom" id="Python Console" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -270,23 +291,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/parse.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="130" column="28" lean-forward="true" selection-start-line="130" selection-start-column="28" selection-end-line="130" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/RPQ.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1785">
-          <caret line="150" column="62" lean-forward="true" selection-start-line="150" selection-start-column="62" selection-end-line="150" selection-end-column="62" />
-          <folding>
-            <element signature="e#0#59#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Graph Green.txt">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -304,20 +308,37 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Proj.py">
+    <entry file="file://$PROJECT_DIR$/proj_test2.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="752">
-          <caret line="174" lean-forward="true" selection-start-line="174" selection-end-line="174" />
+        <state relative-caret-position="-680">
+          <caret line="11" column="47" lean-forward="true" selection-start-line="11" selection-start-column="47" selection-end-line="11" selection-end-column="47" />
           <folding>
             <element signature="e#0#40#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/proj_test2.py">
+    <entry file="file://$PROJECT_DIR$/RPQ.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="242">
-          <caret line="131" column="20" lean-forward="true" selection-start-line="131" selection-start-column="20" selection-end-line="131" selection-end-column="20" />
+        <state relative-caret-position="-2751">
+          <caret line="391" column="7" selection-start-line="391" selection-start-column="4" selection-end-line="391" selection-end-column="7" />
+          <folding>
+            <element signature="e#0#59#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/parse.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="117" column="44" lean-forward="true" selection-start-line="117" selection-start-column="44" selection-end-line="117" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Proj.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="395">
+          <caret line="169" column="31" lean-forward="true" selection-start-line="169" selection-start-column="31" selection-end-line="169" selection-end-column="31" />
           <folding>
             <element signature="e#0#40#0" expanded="true" />
           </folding>

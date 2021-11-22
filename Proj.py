@@ -3,22 +3,12 @@ from parse import NFA, State
 import re
 
 
-def get_incoming_nodes(local_name, local_file, external_name, external_file):
-    gin = loadgraph(local_file)
-    #gout = loadgraph(external_file)
-    node_in = local_name.lower()
-    node_ext = external_name.lower()
-    nodes = []
-    for val in external_file:
-        if val.split(":")[0] != node_in:
-            continue
-        else:
-            if val.split(":")[0].lower() == node_in:
-                nodes.append(node_ext + " " + val)
-    return nodes
-
-
-def get_outgoing_nodes( filename):
+def get_outgoing_nodes(filename):
+    '''
+    Get all outgoing node from the server/file
+    :param filename: Using txt filename in the format |start_node:node_# end_node:_node# transition|
+    :return: a set of nodes
+    '''
     g = loadgraph(filename)
     domain_name = list(g.keys())[0].split(":")[0]  # use the first node in the file to get the domain
     nodes_out = set()
@@ -65,12 +55,14 @@ def get_data_responses(origin_er, graph, list_out_nodes):
 
 def get_data_graph(graph_list, origin_er, outnodes):
     '''
-
+    Get all the responses data structure from all the servers and merge then into a single graph
     :param graph_list: a list of all the graph where requests are sent
     :param origin_er: regular expression to use to find the endpoints
     :param outnodes: set of all outgoing nodes in all the servers
     :return: a dict of all the data in a graph format
     '''
+
+    # Merge all the data_responses together
     full_result, not_filtered_nodes = get_data_responses(origin_er, graph_list[0], outnodes)
     for graph in graph_list[1::]:
         partial_result, partial_not_filtered_nodes = get_data_responses(origin_er, graph, outnodes)
@@ -80,7 +72,7 @@ def get_data_graph(graph_list, origin_er, outnodes):
             if len(partial_result[key]) > 0:
                 for result in partial_result[key]:
                     full_result[key].append(result)
-
+    # Format the data_responses merged into a graph using the loadgraph format
     new_graph = dict()
 
     for key in full_result:
@@ -116,7 +108,7 @@ def expand_re(er):
                    "r3": (0, 3, "<a><b>*<c><d>"),
                    "r4": (1, 1, "<b>+"),
                    "r5": (1, 2, "<b>*<c>"),
-                   "r6": (0, 3, "<b>*<c><d>"),
+                   "r6": (1, 3, "<b>*<c><d>"),
                    "r7": (2, 3, "<d>")}
     return er_expanded
 
@@ -136,7 +128,7 @@ def get_last_state(er_expanded):
 
 er = "<a><b>*<c><d>"
 
-graph_filenames = ["graph_blue_2.txt","graph_green_2.txt", "graph_red_2.txt"]
+graph_filenames = ["graph_blue_2.txt", "graph_green_2.txt", "graph_red_2.txt"]
 
 g = loadgraph("graph_complet2.txt")
 gblue = loadgraph("graph_blue_2.txt")
@@ -163,6 +155,27 @@ NFA1 = NFA(State0, State3)
 NFA1.addstate(State1, set())
 NFA1.addstate(State2, set())
 
+er_for_NFA = expand_re("<a><b>*<c><d>")
+
+def get_NFA(expanded_er):
+    states = get_last_state(expanded_er) + 1
+    list_of_states = []
+    for state in range(states):
+        list_of_states.append(State(str(state)))
+    for er in expanded_er:
+        transitions = dict()
+        for
+        list_of_states[expanded_er[er][0]].transitions = {er: list_of_states[expanded_er[er][1]]}
+    result_NFA = NFA(list_of_states[0], list_of_states[len(list_of_states) - 1])
+    #list_of_states[len(list_of_states)-1].is_end - True
+    for inter_state in list_of_states[1:-1]:
+        result_NFA.addstate(inter_state, set())
+    result_NFA.uglyprint()
+    return result_NFA
+
+NFA_test = get_NFA(er_for_NFA)
+#NFA_test.uglyprint()
+
 test_graph = loadgraph("testing.txt")
 #print(test_graph)
 #print(resultat)
@@ -170,6 +183,7 @@ test_graph = loadgraph("testing.txt")
 #     if key not in resultat:
 #         print(key)
 
-print(resultat)
+#print(resultat)
 results = bfs(resultat, NFA1, "blue:1")
-print(results[0])
+#print(results[0])
+

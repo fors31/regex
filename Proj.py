@@ -2,6 +2,18 @@ from RPQ import loadgraph, runquery, bfs
 from parse import NFA, State
 import re
 
+class Client:
+    def __init__(self, name):
+        self.name = name
+        self.receivedData = {}
+
+
+
+class Serveur:
+    def __init__(self, name, graph):
+        self.name = name
+        self.graph = graph # File containing datagraph
+        self.data
 
 def get_outgoing_nodes(filename):
     '''

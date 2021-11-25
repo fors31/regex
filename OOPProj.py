@@ -39,32 +39,6 @@ class Serveur:
                         nodes_out.add(value[0])
         return nodes_out
 
-
-    def get_incoming_nodes(self, list_server_out_nodes):
-        '''
-        Cycles through a list of given server in order to find if there are external nodes in them that link to
-        this base server.
-        :param list_server_out_nodes: a list of outside servers
-        :return: a set of outside nodes from the list that lead to inner nodes for this server
-        '''
-        node_in = self.domain.lower() # this server's domain name
-        nodes = []
-        for outs in list_server_out_nodes: #cycles through the server list
-            if outs.name == self.name:
-                continue
-            gout = loadgraph(outs.graph) #current server's data graph
-            outnodes = outs.get_outgoing_nodes() #find the current server's outgoing nodes
-            for val in outnodes:                # checks if outgoing nodes appear in the base server
-                if val.split(":")[0] != node_in:
-                    continue
-                else:
-                    if val.split(":")[0] == node_in:
-                        for extgnodes in gout:      # cycles through the current server's datagraph to find which node leads to a base server node
-                           if len(gout[extgnodes]) > 0: # current graph node leads to an external node
-                            if val in gout[extgnodes][0]: # current graph node's an external node leading to the base server
-                                nodes.append([extgnodes,val, gout[extgnodes][0][1]] )
-        return nodes
-
 class Client:
     def __init__(self, name):
         self.name = name
@@ -133,17 +107,19 @@ class Client:
         else:
             self.knownServers[server.name][1]["outnodes"] = outnodes
 
-    def get_server_in_nodes(self, server, other_servers_list):
+
+    def get_innodes(self, server, outnodes_list):
         '''
-        Returns the incoming nodes of a specified server, if said server exists in the knownServers list
-        Otherwise, adds this server to the list of knownServers
-        :param server: a single server for which you want the incoming nodes
+        Gets all incoming nodes for a given server.
+        :param server: The server for which you want to find the incoming nodes
+        :param outnodes_list: Outnodes list for outside servers of the one you inquire about
+        :return: Updates this client's knownServers innodes for the server inquired about
         '''
-        innodes = server.get_incoming_nodes(other_servers_list)
-        if server.name not in self.knownServers:
-            self.knownServers.update({server.name : (server.domain, {"outnodes": ()}, {"innodes" : (innodes)})})
-        else:
-            self.knownServers[server.name][1]["innodes"] = innodes
+        all_nodes = set()
+        for node in outnodes_list: # Check all outgoing nodes in the given list
+            if server.domain in node: # If inquired server's domain appears in the outgoing nodes list iteration
+                all_nodes.add(node)
+        self.knownServers[server.name][2]['innodes'] = (all_nodes) # Update known incoming nodes list for specified server
 
 
     def get_all_out_nodes(self, list_of_servers):
@@ -228,7 +204,6 @@ s1 = Serveur("serveur1", "blue", "graph_blue_2.txt")
 s2 = Serveur("serveur2", "green", "graph_green_2.txt")
 s3 = Serveur("serveur3", "red", "graph_red_2.txt")
 
-
 er = "<a><b>*<c><d>"
 
 graph_filenames = [s1, s2, s3]
@@ -241,10 +216,6 @@ outnodes = c1.get_all_out_nodes(graph_filenames)
 outnodes.add("blue:1")
 graph_list = [gblue, ggreen, gred]
 
-
-#resultat = c1.get_data_graph(s1, graph_list, er, outnodes)
-# for key in resultat:
-# #     print(key, resultat[key])
 
 State0 = State("0")
 State1 = State("1")
@@ -261,20 +232,5 @@ NFA1.addstate(State2, set())
 er_for_NFA = c1.expand_re("<a><b>*<c><d>")
 
 
-NFA_test = c1.get_NFA(er_for_NFA, s1)
-#NFA_test.uglyprint()
-
-#test_graph = loadgraph("testing.txt")
-#print(test_graph)
-#print(resultat)
-# for key in test_graph:
-#     if key not in resultat:
-#         print(key)
-
-#print(resultat)
-#results = bfs(resultat, NFA_test, "blue:1")
-#print(results[0])
 
 
-
-print(test)

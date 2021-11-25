@@ -3,23 +3,30 @@ from parse import NFA, State
 import re
 
 class Serveur:
-    def __init__(self, name, graph):
+    def __init__(self, name, domain, graph):
         self.name = name
+        self.domain = domain
         self.graph = graph # File containing datagraph
         self.data = {}
 
-class Client:
-    def __init__(self, name):
-        self.name = name
-        self.receivedData = {}
+    def get_last_state(self, er_expanded):
+        '''
+        Gets the end state from the dict of rules
+        :param er_expanded: dict of rules
+        :return: the end state of the automata
+        '''
+        end = set()
+        for key in er_expanded:
+            end.add(er_expanded[key][1])
+        #return max(end)
+        return 3
 
-    def get_outgoing_nodes(self, serveur):
+    def get_outgoing_nodes(self):
         '''
         Get all outgoing node from the server/file
-        :param filename: Using txt filename in the format |start_node:node_# end_node:_node# transition|
         :return: a set of nodes
         '''
-        g = loadgraph(serveur.graph)
+        g = loadgraph(self.graph)
         domain_name = list(g.keys())[0].split(":")[0]  # use the first node in the file to get the domain
         nodes_out = set()
         node_in = domain_name.lower()
@@ -32,47 +39,57 @@ class Client:
                         nodes_out.add(value[0])
         return nodes_out
 
-    def get_last_state(self, er_expanded):
-        '''
-        Gets the end state from the dict of rules
-        :param er_expanded: dict of rules
-        :return: the end state of the automata
-        '''
-        end = set()
-        for key in er_expanded:
-            end.add(er_expanded[key][1])
-        return max(end)
 
-    def get_data_responses(self, origin_er, graph, list_out_nodes):
+    def get_incoming_nodes(self, list_server_out_nodes):
         '''
-        Returns a tuple with a data structure with responses to all the requests sent to the servers
-        and a set of not filtered nodes
-        :param origin_er: original regular expression used to filter non end nodes
-        :param graph: graph (dict) used for the guery (use loadgraph to convert)
-        :param list_out_nodes: set of all outgoing nodes
-        :return: a dict of {rule: [(origin_node, {response nodes})]}
+        Cycles through a list of given server in order to find if there are external nodes in them that link to
+        this base server.
+        :param list_server_out_nodes: a list of outside servers
+        :return: a set of outside nodes from the list that lead to inner nodes for this server
         '''
-        data_graph = dict()
-        er_list = expand_re(origin_er)
-        end_state = self.get_last_state(er_list)
-        not_filtered = set()
-        for node in graph:
-            if node not in list_out_nodes:
+        node_in = self.domain.lower() # this server's domain name
+        nodes = []
+        for outs in list_server_out_nodes: #cycles through the server list
+            if outs.name == self.name:
                 continue
-            for er in er_list:
-                data_graph.setdefault(er, [])
-                sol, visited, edgelist, bc = runquery(graph, node, er_list[er][2])
-                res_nodes = set()
-                for res_node in sol:
-                    if res_node in list_out_nodes or end_state == er_list[er][1]:
-                        res_nodes.add(res_node)
-                        if end_state == er_list[er][1]:
-                            not_filtered.add(res_node)
-                if len(res_nodes) != 0:
-                    data_graph[er].append((node, res_nodes))
-        return data_graph, not_filtered
+            gout = loadgraph(outs.graph) #current server's data graph
+            outnodes = outs.get_outgoing_nodes() #find the current server's outgoing nodes
+            for val in outnodes:                # checks if outgoing nodes appear in the base server
+                if val.split(":")[0] != node_in:
+                    continue
+                else:
+                    if val.split(":")[0] == node_in:
+                        for extgnodes in gout:      # cycles through the current server's datagraph to find which node leads to a base server node
+                           if len(gout[extgnodes]) > 0: # current graph node leads to an external node
+                            if val in gout[extgnodes][0]: # current graph node's an external node leading to the base server
+                                nodes.append([extgnodes,val, gout[extgnodes][0][1]] )
+        return nodes
 
-    def get_data_graph(self, graph_list, origin_er, outnodes):
+class Client:
+    def __init__(self, name):
+        self.name = name
+        self.knownServers = { "serveur1": ("blue", {"outnodes": set()}, {"innodes" : set()}),
+                              "serveur2": ("green", {"outnodes": set()}, {"innodes": set()}),
+                              "serveur3": ("red", {"outnodes": set()}, {"innodes": set()}),
+                              }
+
+    def expand_re(self, er):
+        '''
+        TODO: automate the process
+        Uses a regular expression in a format like <a><b>*<c> and decomposes it
+        :param re: regular expression to decompose
+        :return: a dict of rule : (start state, end state, regular expression)
+        '''
+        er_expanded = {"r1": (0, 1, "<a><b>*"),
+                       "r2": (0, 2, "<a><b>*<c>"),
+                       "r3": (0, 3, "<a><b>*<c><d>"),
+                       "r4": (1, 1, "<b>+"),
+                       "r5": (1, 2, "<b>*<c>"),
+                       "r6": (1, 3, "<b>*<c><d>"),
+                       "r7": (2, 3, "<d>")}
+        return er_expanded
+
+    def get_data_graph(self, serveur, graph_list, origin_er, outnodes):
         '''
         Get all the responses data structure from all the servers and merge then into a single graph
         :param graph_list: a list of all the graph where requests are sent
@@ -82,9 +99,9 @@ class Client:
         '''
 
         # Merge all the data_responses together
-        full_result, not_filtered_nodes = self.get_data_responses(origin_er, graph_list[0], outnodes)
+        full_result, not_filtered_nodes = serveur.get_data_responses(origin_er, graph_list[0], outnodes)
         for graph in graph_list[1::]:
-            partial_result, partial_not_filtered_nodes = self.get_data_responses(origin_er, graph, outnodes)
+            partial_result, partial_not_filtered_nodes = serveur.get_data_responses(origin_er, graph, outnodes)
             for not_filtered_node in partial_not_filtered_nodes:
                 not_filtered_nodes.add(not_filtered_node)
             for key in partial_result:
@@ -103,6 +120,32 @@ class Client:
             new_graph.setdefault(not_filtered_node, [])
         return new_graph
 
+
+    def get_server_out_nodes(self, server):
+        '''
+        Returns the outgoing nodes of a specified server, if said server exists in the knownServers list
+        Otherwise, adds this server to the list of knownServers
+        :param server: a single server for which you want the outgoing nodes
+        '''
+        outnodes = server.get_outgoing_nodes()
+        if server.name not in self.knownServers:
+            self.knownServers.update({server.name : (server.domain, {"outnodes": (outnodes)}, {"innodes" : ()})})
+        else:
+            self.knownServers[server.name][1]["outnodes"] = outnodes
+
+    def get_server_in_nodes(self, server, other_servers_list):
+        '''
+        Returns the incoming nodes of a specified server, if said server exists in the knownServers list
+        Otherwise, adds this server to the list of knownServers
+        :param server: a single server for which you want the incoming nodes
+        '''
+        innodes = server.get_incoming_nodes(other_servers_list)
+        if server.name not in self.knownServers:
+            self.knownServers.update({server.name : (server.domain, {"outnodes": ()}, {"innodes" : (innodes)})})
+        else:
+            self.knownServers[server.name][1]["innodes"] = innodes
+
+
     def get_all_out_nodes(self, list_of_servers):
         '''
         Use a list of filenames (graphs) to get all the outgoing nodes
@@ -110,17 +153,47 @@ class Client:
         '''
         all_out_nodes = set()
         for server in list_of_servers:
-            nodes = self.get_outgoing_nodes(server)
+            nodes = server.get_outgoing_nodes()
             all_out_nodes.update(list(nodes))
         return all_out_nodes
 
-    def get_NFA(self, expanded_er):
+    def get_data_responses(self, server, origin_er, list_out_nodes):
+        '''
+        Returns a tuple with a data structure with responses to all the requests sent to the servers
+        and a set of not filtered nodes
+        :param origin_er: original regular expression used to filter non end nodes
+        :param graph: graph (dict) used for the guery (use loadgraph to convert)
+        :param list_out_nodes: set of all outgoing nodes
+        :return: a dict of {rule: [(origin_node, {response nodes})]}
+        '''
+        graph = server.graph
+        data_graph = dict()
+        er_list = self.expand_re(origin_er)
+        end_state = server.get_last_state(er_list)
+        not_filtered = set()
+        for node in graph:
+            if node not in list_out_nodes:
+                continue
+            for er in er_list:
+                data_graph.setdefault(er, [])
+                sol, visited, edgelist, bc = runquery(graph, node, er_list[er][2])
+                res_nodes = set()
+                for res_node in sol:
+                    if res_node in list_out_nodes or end_state == er_list[er][1]:
+                        res_nodes.add(res_node)
+                        if end_state == er_list[er][1]:
+                            not_filtered.add(res_node)
+                if len(res_nodes) != 0:
+                    data_graph[er].append((node, res_nodes))
+        return data_graph, not_filtered
+
+    def get_NFA(self, expanded_er, server):
         '''
         Builds an NFA using the State and NFA classes from parse.py
         :param expanded_er: Takes a dict after being passed into the expand_re method
         :return: an NFA object
         '''
-        states = self.get_last_state(expanded_er) + 1
+        states = server.get_last_state(expanded_er) + 1
         list_of_states = []
         transitions = dict()
 
@@ -151,26 +224,10 @@ class Client:
 
 
 c1 = Client("clientnom")
-s1 = Serveur("serveurnom1", "graph_blue_2.txt")
-s2 = Serveur("serveurnom2", "graph_green_2.txt")
-s3 = Serveur("serveurnom3", "graph_red_2.txt")
+s1 = Serveur("serveur1", "blue", "graph_blue_2.txt")
+s2 = Serveur("serveur2", "green", "graph_green_2.txt")
+s3 = Serveur("serveur3", "red", "graph_red_2.txt")
 
-
-def expand_re(er):
-    '''
-    TODO: automate the process
-    Uses a regular expression in a format like <a><b>*<c> and decomposes it
-    :param re: regular expression to decompose
-    :return: a dict of rule : (start state, end state, regular expression)
-    '''
-    er_expanded = {"r1": (0, 1, "<a><b>*"),
-                   "r2": (0, 2, "<a><b>*<c>"),
-                   "r3": (0, 3, "<a><b>*<c><d>"),
-                   "r4": (1, 1, "<b>+"),
-                   "r5": (1, 2, "<b>*<c>"),
-                   "r6": (1, 3, "<b>*<c><d>"),
-                   "r7": (2, 3, "<d>")}
-    return er_expanded
 
 er = "<a><b>*<c><d>"
 
@@ -185,7 +242,7 @@ outnodes.add("blue:1")
 graph_list = [gblue, ggreen, gred]
 
 
-resultat = c1.get_data_graph(graph_list, er, outnodes)
+#resultat = c1.get_data_graph(s1, graph_list, er, outnodes)
 # for key in resultat:
 # #     print(key, resultat[key])
 
@@ -201,11 +258,10 @@ NFA1 = NFA(State0, State3)
 NFA1.addstate(State1, set())
 NFA1.addstate(State2, set())
 
-er_for_NFA = expand_re("<a><b>*<c><d>")
+er_for_NFA = c1.expand_re("<a><b>*<c><d>")
 
 
-
-NFA_test = c1.get_NFA(er_for_NFA)
+NFA_test = c1.get_NFA(er_for_NFA, s1)
 #NFA_test.uglyprint()
 
 #test_graph = loadgraph("testing.txt")
@@ -216,6 +272,9 @@ NFA_test = c1.get_NFA(er_for_NFA)
 #         print(key)
 
 #print(resultat)
-results = bfs(resultat, NFA_test, "blue:1")
-print(results[0])
+#results = bfs(resultat, NFA_test, "blue:1")
+#print(results[0])
 
+
+
+print(test)

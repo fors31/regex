@@ -1,5 +1,6 @@
 from RPQ import loadgraph, runquery, bfs
 from parse import NFA, State
+from jinja2 import Environment, FileSystemLoader
 import re
 
 class Serveur:
@@ -230,6 +231,12 @@ NFA1.addstate(State1, set())
 NFA1.addstate(State2, set())
 
 er_for_NFA = c1.expand_re("<a><b>*<c><d>")
+
+file_loader = FileSystemLoader('SPARQL-Templates')
+env = Environment(loader=file_loader)
+template = env.get_template('test1.py')
+output = template.render()
+print(output)
 
 
 

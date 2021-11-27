@@ -1,19 +1,7 @@
-from RPQ import loadgraph, runquery, bfs
+from RPQ import loadgraph, runquery, bfs, compile
 from parse import NFA, State
 import re
 
-class Client:
-    def __init__(self, name):
-        self.name = name
-        self.receivedData = {}
-
-
-
-class Serveur:
-    def __init__(self, name, graph):
-        self.name = name
-        self.graph = graph # File containing datagraph
-        self.data
 
 def get_outgoing_nodes(filename):
     '''
@@ -45,20 +33,22 @@ def get_data_responses(origin_er, graph, list_out_nodes):
     :return: a dict of {rule: [(origin_node, {response nodes})]}
     '''
     data_graph = dict()
-    er_list = expand_re(origin_er)
-    end_state = get_last_state(er_list)
+    er_list, start_state, end_state = expand_re(origin_er)
     not_filtered = set()
     for node in graph:
         if node not in list_out_nodes:
             continue
+
+        # Run a query for each rule of the expanded_re and inserts the responses in a
+        # dict format -> {rule : [(start_node, {set of end nodes})]}
         for er in er_list:
             data_graph.setdefault(er, [])
             sol, visited, edgelist, bc = runquery(graph, node, er_list[er][2])
             res_nodes = set()
             for res_node in sol:
-                if res_node in list_out_nodes or end_state == er_list[er][1]:
+                if res_node in list_out_nodes or er_list[er][1].is_end is True:
                     res_nodes.add(res_node)
-                    if end_state == er_list[er][1]:
+                    if er_list[er][1].is_end is True:
                         not_filtered.add(res_node)
             if len(res_nodes) != 0:
                 data_graph[er].append((node, res_nodes))
@@ -108,34 +98,102 @@ def get_all_out_nodes(list_of_graph):
     return all_out_nodes
 
 
-def expand_re(er):
+def expand_re(regex):
     '''
     TODO: automate the process
     Uses a regular expression in a format like <a><b>*<c> and decomposes it
+    Us
     :param re: regular expression to decompose
-    :return: a dict of rule : (start state, end state, regular expression)
+    :return: a dict of rule : (start state, end state, regular expression),
+             the NFA's start state and a set of all the end states
     '''
-    er_expanded = {"r1": (0, 1, "<a><b>*"),
-                   "r2": (0, 2, "<a><b>*<c>"),
-                   "r3": (0, 3, "<a><b>*<c><d>"),
-                   "r4": (1, 1, "<b>+"),
-                   "r5": (1, 2, "<b>*<c>"),
-                   "r6": (1, 3, "<b>*<c><d>"),
-                   "r7": (2, 3, "<d>")}
-    return er_expanded
+    compiled_regex = compile(regex)
+
+    # Get a list of all the states of the original regex from the NFA
+    states = []
+    visited, queue = set(), [compiled_regex.start]
+
+    while queue:
+        vertex = queue.pop(0)
+        if vertex not in visited:
+            visited.add(vertex)
+            transitions = set()
+            for k in vertex.transitions.keys():
+                trans = vertex.transitions[k]
+                states.append(trans)
+                if trans not in visited:
+                    transitions.add(trans)
+
+            transitions.update(vertex.epsilon)
+            queue.extend([s for s in transitions if s not in visited])
+
+    # Manual decomposition of the regex using states from the original regex NFA
+    re_expanded = {"r1": (states[0], states[1], "<a><b>*"),
+                   "r2": (states[0], states[2], "<a><b>*<c>"),
+                   "r3": (states[0], states[3], "<a><b>*<c><d>"),
+                   "r4": (states[1], states[1], "<b>+"),
+                   "r5": (states[1], states[2], "<b>*<c>"),
+                   "r6": (states[1], states[3], "<b>*<c><d>"),
+                   "r7": (states[2], states[3], "<d>")}
+
+    start_state = compiled_regex.start
+
+    # Find all the end states in the NFA
+    end_states = set()
+    for state in states:
+        if state.is_end is True:
+            end_states.add(state)
+
+    return re_expanded, start_state, end_states
 
 
-def get_last_state(er_expanded):
+def get_NFA(expanded_re):
     '''
-    Gets the end state from the dict of rules
-    :param er_expanded: dict of rules
-    :return: the end state of the automata
+    Builds an NFA using the State and NFA classes from parse.py
+    :param expanded_re: Takes a dict after being passed into the expand_re method
+    :return: an NFA object
     '''
-    end = set()
-    for key in er_expanded:
-        end.add(er_expanded[key][1])
-    return max(end)
+    list_of_states = []
+    transitions = dict()
+    rules = expanded_re[0]
+    end_state = None
 
+    # Creates a list of all the states from the expanded_re rules
+    for rule in rules:
+        for state in rules[rule][:2]:
+            if state not in list_of_states:
+                list_of_states.append(state)
+
+    # Get all the transitions for each State
+    for rule in rules:
+        transitions.setdefault(rules[rule][0], set())
+        transitions[rules[rule][0]].add((rules[rule][1], rule))
+
+    # Transform into a set of transition in dict and add them to the actual state
+    for state in transitions:
+        actual_transitions = {}
+        for transition in transitions[state]:
+            actual_transitions.setdefault(transition[1], transition[0])
+        state.transitions = actual_transitions
+
+    # Get first state
+    start_state = list_of_states[0]
+    list_of_states.remove(start_state)
+
+    # Get last state
+    for state in list_of_states:
+        if state.is_end:
+            end_state = state
+            list_of_states.remove(state)
+
+    # Set start and end states
+    result_NFA = NFA(start_state, end_state)
+
+    # Add all the states in between
+    for inter_state in list_of_states:
+        result_NFA.addstate(inter_state, set())
+
+    return result_NFA
 
 
 er = "<a><b>*<c><d>"
@@ -150,10 +208,7 @@ outnodes = get_all_out_nodes(graph_filenames)
 outnodes.add("blue:1")
 graph_list = [gblue, ggreen, gred]
 
-
 resultat = get_data_graph(graph_list, er, outnodes)
-# for key in resultat:
-# #     print(key, resultat[key])
 
 State0 = State("0")
 State1 = State("1")
@@ -167,45 +222,11 @@ NFA1 = NFA(State0, State3)
 NFA1.addstate(State1, set())
 NFA1.addstate(State2, set())
 
-er_for_NFA = expand_re("<a><b>*<c><d>")
+er_for_NFA, start, end = expand_re("<a><b>*<c><d>")
 
-def get_NFA(expanded_er):
-    '''
-    Builds an NFA using the State and NFA classes from parse.py
-    :param expanded_er: Takes a dict after being passed into the expand_re method
-    :return: an NFA object
-    '''
-    states = get_last_state(expanded_er) + 1
-    list_of_states = []
-    transitions = dict()
 
-    # Creates a list of all the states
-    for state in range(states):
-        list_of_states.append(State(str(state)))
+get_NFA(expand_re("<a><b>*<c><d>"))
 
-    # Get all the transitions for each state in textual form
-    for er in expanded_er:
-        transitions.setdefault(expanded_er[er][0], set())
-        transitions[expanded_er[er][0]].add((expanded_er[er][1], er))
-
-    # Transform into a set of transition in dict and add them to the actual state
-    for trans_state in transitions:
-        actual_transition = {}
-        for transition in transitions[trans_state]:
-            actual_transition.setdefault(transition[1], list_of_states[transition[0]])
-        list_of_states[trans_state].transitions = actual_transition
-
-    # Set start and end states
-    result_NFA = NFA(list_of_states[0], list_of_states[len(list_of_states) - 1])
-
-    # Add all the states in between
-    for inter_state in list_of_states[1:-1]:
-        result_NFA.addstate(inter_state, set())
-
-    return result_NFA
-
-NFA_test = get_NFA(er_for_NFA)
-#NFA_test.uglyprint()
 
 test_graph = loadgraph("testing.txt")
 #print(test_graph)
@@ -215,6 +236,10 @@ test_graph = loadgraph("testing.txt")
 #         print(key)
 
 #print(resultat)
-results = bfs(resultat, NFA_test, "blue:1")
+results = bfs(resultat, NFA1, "blue:1")
 print(results[0])
 
+#re_expanded.pretty_print()
+#print(re_expanded.start.transitions['a'].name)
+
+expand_re("<a><b>*<c><d>")

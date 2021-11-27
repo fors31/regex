@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="160721ce-6508-4909-9705-1f56c16571b2" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/SPARQL-Templates/test1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/regex.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/regex.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/OOPProj.py" beforeDir="false" afterPath="$PROJECT_DIR$/OOPProj.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -93,7 +95,7 @@
       <recent name="C:\Users\Alex\source\gitKraken\regex" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.Proj">
+  <component name="RunManager" selected="Python.OOPProj">
     <configuration name="OOPProj" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="regex" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -158,19 +160,19 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.OOPProj" />
       <item itemvalue="Python.Proj" />
       <item itemvalue="Python.proj_test2" />
+      <item itemvalue="Python.OOPProj" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.Proj" />
         <item itemvalue="Python.OOPProj" />
+        <item itemvalue="Python.Proj" />
         <item itemvalue="Python.proj_test2" />
       </list>
     </recent_temporary>
   </component>
-  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="false" />
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>

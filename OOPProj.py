@@ -1,4 +1,4 @@
-from RPQ import loadgraph, runquery, bfs
+from RPQ import loadgraph, runquery, compile, bfs
 from parse import NFA, State
 from jinja2 import Environment, FileSystemLoader
 import re
@@ -48,23 +48,88 @@ class Client:
                               "serveur3": ("red", {"outnodes": set()}, {"innodes": set()}),
                               }
 
-    def expand_re(self, er):
+    def expand_re(self, regex):
         '''
         TODO: automate the process
         Uses a regular expression in a format like <a><b>*<c> and decomposes it
+        Us
         :param re: regular expression to decompose
-        :return: a dict of rule : (start state, end state, regular expression)
+        :return: a dict of rule : (start state, end state, regular expression),
+                 the NFA's start state and a set of all the end states
         '''
-        er_expanded = {"r1": (0, 1, "<a><b>*"),
-                       "r2": (0, 2, "<a><b>*<c>"),
-                       "r3": (0, 3, "<a><b>*<c><d>"),
-                       "r4": (1, 1, "<b>+"),
-                       "r5": (1, 2, "<b>*<c>"),
-                       "r6": (1, 3, "<b>*<c><d>"),
-                       "r7": (2, 3, "<d>")}
-        return er_expanded
+        compiled_regex = compile(regex)
 
-    def get_data_graph(self, serveur, graph_list, origin_er, outnodes):
+        # Get a list of all the states of the original regex from the NFA
+        states = []
+        visited, queue = set(), [compiled_regex.start]
+
+        while queue:
+            vertex = queue.pop(0)
+            if vertex not in visited:
+                visited.add(vertex)
+                transitions = set()
+                for k in vertex.transitions.keys():
+                    trans = vertex.transitions[k]
+                    states.append(trans)
+                    if trans not in visited:
+                        transitions.add(trans)
+
+                transitions.update(vertex.epsilon)
+                queue.extend([s for s in transitions if s not in visited])
+
+        # Manual decomposition of the regex using states from the original regex NFA
+        re_expanded = {"r1": (states[0], states[1], "<a><b>*"),
+                       "r2": (states[0], states[2], "<a><b>*<c>"),
+                       "r3": (states[0], states[3], "<a><b>*<c><d>"),
+                       "r4": (states[1], states[1], "<b>+"),
+                       "r5": (states[1], states[2], "<b>*<c>"),
+                       "r6": (states[1], states[3], "<b>*<c><d>"),
+                       "r7": (states[2], states[3], "<d>")}
+
+        start_state = compiled_regex.start
+
+        # Find all the end states in the NFA
+        end_states = set()
+        for state in states:
+            if state.is_end is True:
+                end_states.add(state)
+
+        return re_expanded, start_state, end_states
+
+
+    def get_data_responses(self, origin_er, graph, list_out_nodes):
+        '''
+        Returns a tuple with a data structure with responses to all the requests sent to the servers
+        and a set of not filtered nodes
+        :param origin_er: original regular expression used to filter non end nodes
+        :param graph: graph (dict) used for the guery (use loadgraph to convert)
+        :param list_out_nodes: set of all outgoing nodes
+        :return: a dict of {rule: [(origin_node, {response nodes})]}
+        '''
+
+        data_graph = dict()
+        er_list, start_state, end_state = self.expand_re(origin_er)
+        not_filtered = set()
+        for node in graph:
+            if node not in list_out_nodes:
+                continue
+
+                # Run a query for each rule of the expanded_re and inserts the responses in a
+                # dict format -> {rule : [(start_node, {set of end nodes})]}
+            for er in er_list:
+                data_graph.setdefault(er, [])
+                sol, visited, edgelist, bc = runquery(graph, node, er_list[er][2])
+                res_nodes = set()
+                for res_node in sol:
+                    if res_node in list_out_nodes or er_list[er][1].is_end is True:
+                        res_nodes.add(res_node)
+                        if er_list[er][1].is_end is True:
+                            not_filtered.add(res_node)
+                if len(res_nodes) != 0:
+                    data_graph[er].append((node, res_nodes))
+        return data_graph, not_filtered
+
+    def get_data_graph(self, graph_list, origin_er, outnodes):
         '''
         Get all the responses data structure from all the servers and merge then into a single graph
         :param graph_list: a list of all the graph where requests are sent
@@ -74,9 +139,9 @@ class Client:
         '''
 
         # Merge all the data_responses together
-        full_result, not_filtered_nodes = serveur.get_data_responses(origin_er, graph_list[0], outnodes)
+        full_result, not_filtered_nodes = self.get_data_responses(origin_er, graph_list[0], outnodes)
         for graph in graph_list[1::]:
-            partial_result, partial_not_filtered_nodes = serveur.get_data_responses(origin_er, graph, outnodes)
+            partial_result, partial_not_filtered_nodes = self.get_data_responses(origin_er, graph, outnodes)
             for not_filtered_node in partial_not_filtered_nodes:
                 not_filtered_nodes.add(not_filtered_node)
             for key in partial_result:
@@ -91,7 +156,7 @@ class Client:
                 new_graph.setdefault(node[0], list())
                 for destination in node[1]:
                     new_graph[node[0]].append((destination, key))
-        for not_filtered_node in not_filtered_nodes: #add not filtered nodes to respect the format
+        for not_filtered_node in not_filtered_nodes:  # add not filtered nodes to respect the format
             new_graph.setdefault(not_filtered_node, [])
         return new_graph
 
@@ -134,67 +199,53 @@ class Client:
             all_out_nodes.update(list(nodes))
         return all_out_nodes
 
-    def get_data_responses(self, server, origin_er, list_out_nodes):
-        '''
-        Returns a tuple with a data structure with responses to all the requests sent to the servers
-        and a set of not filtered nodes
-        :param origin_er: original regular expression used to filter non end nodes
-        :param graph: graph (dict) used for the guery (use loadgraph to convert)
-        :param list_out_nodes: set of all outgoing nodes
-        :return: a dict of {rule: [(origin_node, {response nodes})]}
-        '''
-        graph = server.graph
-        data_graph = dict()
-        er_list = self.expand_re(origin_er)
-        end_state = server.get_last_state(er_list)
-        not_filtered = set()
-        for node in graph:
-            if node not in list_out_nodes:
-                continue
-            for er in er_list:
-                data_graph.setdefault(er, [])
-                sol, visited, edgelist, bc = runquery(graph, node, er_list[er][2])
-                res_nodes = set()
-                for res_node in sol:
-                    if res_node in list_out_nodes or end_state == er_list[er][1]:
-                        res_nodes.add(res_node)
-                        if end_state == er_list[er][1]:
-                            not_filtered.add(res_node)
-                if len(res_nodes) != 0:
-                    data_graph[er].append((node, res_nodes))
-        return data_graph, not_filtered
 
-    def get_NFA(self, expanded_er, server):
+
+    def get_NFA(self, expanded_re):
         '''
         Builds an NFA using the State and NFA classes from parse.py
         :param expanded_er: Takes a dict after being passed into the expand_re method
         :return: an NFA object
         '''
-        states = server.get_last_state(expanded_er) + 1
+
         list_of_states = []
         transitions = dict()
+        rules = expanded_re[0]
+        end_state = None
 
-        # Creates a list of all the states
-        for state in range(states):
-            list_of_states.append(State(str(state)))
+        # Creates a list of all the states from the expanded_re rules
+        for rule in rules:
+            for state in rules[rule][:2]:
+                if state not in list_of_states:
+                    list_of_states.append(state)
 
-        # Get all the transitions for each state in textual form
-        for er in expanded_er:
-            transitions.setdefault(expanded_er[er][0], set())
-            transitions[expanded_er[er][0]].add((expanded_er[er][1], er))
+        # Get all the transitions for each State
+        for rule in rules:
+            transitions.setdefault(rules[rule][0], set())
+            transitions[rules[rule][0]].add((rules[rule][1], rule))
 
         # Transform into a set of transition in dict and add them to the actual state
-        for trans_state in transitions:
-            actual_transition = {}
-            for transition in transitions[trans_state]:
-                actual_transition.setdefault(transition[1], list_of_states[transition[0]])
-            list_of_states[trans_state].transitions = actual_transition
+        for state in transitions:
+            actual_transitions = {}
+            for transition in transitions[state]:
+                actual_transitions.setdefault(transition[1], transition[0])
+            state.transitions = actual_transitions
+
+        # Get first state
+        start_state = list_of_states[0]
+        list_of_states.remove(start_state)
+
+        # Get last state
+        for state in list_of_states:
+            if state.is_end:
+                end_state = state
+                list_of_states.remove(state)
 
         # Set start and end states
-        result_NFA = NFA(list_of_states[0], list_of_states[len(list_of_states) - 1])
+        result_NFA = NFA(start_state, end_state)
 
         # Add all the states in between
-        for inter_state in list_of_states[1:-1]:
+        for inter_state in list_of_states:
             result_NFA.addstate(inter_state, set())
 
         return result_NFA
@@ -215,6 +266,8 @@ ggreen = loadgraph("graph_green_2.txt")
 gred = loadgraph("graph_red_2.txt")
 outnodes = c1.get_all_out_nodes(graph_filenames)
 outnodes.add("blue:1")
+
+
 graph_list = [gblue, ggreen, gred]
 
 
@@ -230,13 +283,18 @@ NFA1 = NFA(State0, State3)
 NFA1.addstate(State1, set())
 NFA1.addstate(State2, set())
 
-er_for_NFA = c1.expand_re("<a><b>*<c><d>")
+resultat = c1.get_data_graph(graph_list, er, outnodes)
+resultatObj = c1.get_data_graph([loadgraph(s1.graph), loadgraph(s2.graph), loadgraph(s3.graph)], er, outnodes)
+results = bfs(resultatObj, NFA1, "blue:1")
+
+print(results[0])
+
 
 file_loader = FileSystemLoader('SPARQL-Templates')
 env = Environment(loader=file_loader)
 template = env.get_template('test1.py')
 output = template.render()
-print(output)
+#print(output)
 
 
 

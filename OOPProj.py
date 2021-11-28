@@ -1,7 +1,7 @@
 from RPQ import loadgraph, runquery, compile, bfs
 from parse import NFA, State
 from jinja2 import Environment, FileSystemLoader
-import re
+
 
 class Serveur:
     def __init__(self, name, domain, graph):
@@ -9,18 +9,6 @@ class Serveur:
         self.domain = domain
         self.graph = graph # File containing datagraph
         self.data = {}
-
-    def get_last_state(self, er_expanded):
-        '''
-        Gets the end state from the dict of rules
-        :param er_expanded: dict of rules
-        :return: the end state of the automata
-        '''
-        end = set()
-        for key in er_expanded:
-            end.add(er_expanded[key][1])
-        #return max(end)
-        return 3
 
     def get_outgoing_nodes(self):
         '''
@@ -43,10 +31,10 @@ class Serveur:
 class Client:
     def __init__(self, name):
         self.name = name
-        self.knownServers = { "serveur1": ("blue", {"outnodes": set()}, {"innodes" : set()}),
+        self.knownServers = {"serveur1": ("blue", {"outnodes": set()}, {"innodes" : set()}),
                               "serveur2": ("green", {"outnodes": set()}, {"innodes": set()}),
                               "serveur3": ("red", {"outnodes": set()}, {"innodes": set()}),
-                              }
+                             }
 
     def expand_re(self, regex):
         '''
@@ -160,7 +148,6 @@ class Client:
             new_graph.setdefault(not_filtered_node, [])
         return new_graph
 
-
     def get_server_out_nodes(self, server):
         '''
         Returns the outgoing nodes of a specified server, if said server exists in the knownServers list
@@ -172,7 +159,6 @@ class Client:
             self.knownServers.update({server.name : (server.domain, {"outnodes": (outnodes)}, {"innodes" : ()})})
         else:
             self.knownServers[server.name][1]["outnodes"] = outnodes
-
 
     def get_innodes(self, server, outnodes_list):
         '''
@@ -187,7 +173,6 @@ class Client:
                 all_nodes.add(node)
         self.knownServers[server.name][2]['innodes'] = (all_nodes) # Update known incoming nodes list for specified server
 
-
     def get_all_out_nodes(self, list_of_servers):
         '''
         Use a list of filenames (graphs) to get all the outgoing nodes
@@ -198,8 +183,6 @@ class Client:
             nodes = server.get_outgoing_nodes()
             all_out_nodes.update(list(nodes))
         return all_out_nodes
-
-
 
     def get_NFA(self, expanded_re):
         '''
@@ -271,20 +254,9 @@ outnodes.add("blue:1")
 graph_list = [gblue, ggreen, gred]
 
 
-State0 = State("0")
-State1 = State("1")
-State2 = State("2")
-State3 = State("3")
-State0.transitions = {"r1": State1, "r2": State2, "r3": State3}
-State1.transitions = {"r4": State1, "r5": State2, "r6": State3}
-State2.transitions = {"r7": State3}
-State3.is_end = True
-NFA1 = NFA(State0, State3)
-NFA1.addstate(State1, set())
-NFA1.addstate(State2, set())
-
 resultat = c1.get_data_graph(graph_list, er, outnodes)
 resultatObj = c1.get_data_graph([loadgraph(s1.graph), loadgraph(s2.graph), loadgraph(s3.graph)], er, outnodes)
+NFA1 = c1.get_NFA(c1.expand_re(er))
 results = bfs(resultatObj, NFA1, "blue:1")
 
 print(results[0])

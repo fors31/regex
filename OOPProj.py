@@ -250,17 +250,7 @@ gred = loadgraph("graph_red_2.txt")
 outnodes = c1.get_all_out_nodes(graph_filenames)
 outnodes.add("blue:1")
 
-
 graph_list = [gblue, ggreen, gred]
-
-
-resultat = c1.get_data_graph(graph_list, er, outnodes)
-resultatObj = c1.get_data_graph([loadgraph(s1.graph), loadgraph(s2.graph), loadgraph(s3.graph)], er, outnodes)
-NFA1 = c1.get_NFA(c1.expand_re(er))
-results = bfs(resultatObj, NFA1, "blue:1")
-
-print(results[0])
-
 
 file_loader = FileSystemLoader('SPARQL-Templates')
 env = Environment(loader=file_loader)
@@ -268,6 +258,14 @@ template = env.get_template('test1.py')
 output = template.render()
 #print(output)
 
+
+# Test case
+resultat = c1.get_data_graph(graph_list, er, outnodes)
+resultatObj = c1.get_data_graph([loadgraph(s1.graph), loadgraph(s2.graph), loadgraph(s3.graph)], er, outnodes)
+NFA1 = c1.get_NFA(c1.expand_re(er))
+results = bfs(resultatObj, NFA1, "blue:1")
+
+print(results[0])
 
 
 

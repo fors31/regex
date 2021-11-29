@@ -32,8 +32,8 @@ class Client:
     def __init__(self, name):
         self.name = name
         self.knownServers = {"serveur1": ("blue", {"outnodes": set()}, {"innodes" : set()}),
-                              "serveur2": ("green", {"outnodes": set()}, {"innodes": set()}),
-                              "serveur3": ("red", {"outnodes": set()}, {"innodes": set()}),
+                             "serveur2": ("green", {"outnodes": set()}, {"innodes": set()}),
+                             "serveur3": ("red", {"outnodes": set()}, {"innodes": set()}),
                              }
 
     def expand_re(self, regex):
@@ -41,13 +41,14 @@ class Client:
         TODO: automate the process
         Uses a regular expression in a format like <a><b>*<c> and decomposes it
         Us
-        :param re: regular expression to decompose
+        :param regex: regular expression to decompose
         :return: a dict of rule : (start state, end state, regular expression),
                  the NFA's start state and a set of all the end states
         '''
         compiled_regex = compile(regex)
 
         # Get a list of all the states of the original regex from the NFA
+        # Code borrowed from parse.py NFA.uglyprint()
         states = []
         visited, queue = set(), [compiled_regex.start]
 
@@ -85,51 +86,57 @@ class Client:
         return re_expanded, start_state, end_states
 
 
-    def get_data_responses(self, origin_er, graph, list_out_nodes):
+    def get_data_responses(self, origin_re, graph, list_in_nodes, list_out_nodes):
         '''
         Returns a tuple with a data structure with responses to all the requests sent to the servers
         and a set of not filtered nodes
-        :param origin_er: original regular expression used to filter non end nodes
+        :param origin_re: original regular expression used to filter non end nodes
         :param graph: graph (dict) used for the guery (use loadgraph to convert)
-        :param list_out_nodes: set of all outgoing nodes
+        :param list_in_nodes: set of all ingoing nodes
         :return: a dict of {rule: [(origin_node, {response nodes})]}
         '''
 
         data_graph = dict()
-        er_list, start_state, end_state = self.expand_re(origin_er)
+        er_list, start_state, end_states = self.expand_re(origin_re)
         not_filtered = set()
         for node in graph:
-            if node not in list_out_nodes:
+            if node not in list_in_nodes:
                 continue
 
-                # Run a query for each rule of the expanded_re and inserts the responses in a
-                # dict format -> {rule : [(start_node, {set of end nodes})]}
-            for er in er_list:
-                data_graph.setdefault(er, [])
-                sol, visited, edgelist, bc = runquery(graph, node, er_list[er][2])
+            # Run a query for each rule of the expanded_re and inserts the responses in a
+            # dict format -> {rule : [(start_node, {set of end nodes})]}
+            for regex in er_list:
+                data_graph.setdefault(regex, [])
+                sol, visited, edgelist, bc = runquery(graph, node, er_list[regex][2])
                 res_nodes = set()
                 for res_node in sol:
-                    if res_node in list_out_nodes or er_list[er][1].is_end is True:
+                    if res_node in list_out_nodes or er_list[regex][1].is_end is True:
                         res_nodes.add(res_node)
-                        if er_list[er][1].is_end is True:
+                        if er_list[regex][1].is_end is True:
                             not_filtered.add(res_node)
                 if len(res_nodes) != 0:
-                    data_graph[er].append((node, res_nodes))
+                    data_graph[regex].append((node, res_nodes))
         return data_graph, not_filtered
 
-    def get_data_graph(self, graph_list, origin_er, outnodes):
+    def get_data_graph(self, graph_list, origin_er):
         '''
         Get all the responses data structure from all the servers and merge then into a single graph
         :param graph_list: a list of all the graph where requests are sent
         :param origin_er: regular expression to use to find the endpoints
-        :param outnodes: set of all outgoing nodes in all the servers
+        :param innodes: set of all ingoing nodes in all the servers
         :return: a dict of all the data in a graph format
         '''
 
         # Merge all the data_responses together
-        full_result, not_filtered_nodes = self.get_data_responses(origin_er, graph_list[0], outnodes)
-        for graph in graph_list[1::]:
-            partial_result, partial_not_filtered_nodes = self.get_data_responses(origin_er, graph, outnodes)
+        full_result, not_filtered_nodes = self.get_data_responses(origin_er,
+                                          loadgraph(graph_list[0].graph),
+                                          self.knownServers[graph_list[0].name][2]["innodes"],
+                                          self.knownServers[graph_list[0].name][1]["outnodes"])
+        for current_graph in graph_list[1::]:
+            partial_result, partial_not_filtered_nodes = self.get_data_responses(origin_er,
+                                                         loadgraph(current_graph.graph),
+                                                         self.knownServers[current_graph.name][2]["innodes"],
+                                                         self.knownServers[current_graph.name][1]["outnodes"])
             for not_filtered_node in partial_not_filtered_nodes:
                 not_filtered_nodes.add(not_filtered_node)
             for key in partial_result:
@@ -171,7 +178,7 @@ class Client:
         for node in outnodes_list: # Check all outgoing nodes in the given list
             if server.domain in node: # If inquired server's domain appears in the outgoing nodes list iteration
                 all_nodes.add(node)
-        self.knownServers[server.name][2]['innodes'] = (all_nodes) # Update known incoming nodes list for specified server
+        self.knownServers[server.name][2]['innodes'] = all_nodes # Update known incoming nodes list for specified server
 
     def get_all_out_nodes(self, list_of_servers):
         '''
@@ -234,6 +241,8 @@ class Client:
         return result_NFA
 
 
+# ---- Test case ----
+
 c1 = Client("clientnom")
 s1 = Serveur("serveur1", "blue", "graph_blue_2.txt")
 s2 = Serveur("serveur2", "green", "graph_green_2.txt")
@@ -241,31 +250,37 @@ s3 = Serveur("serveur3", "red", "graph_red_2.txt")
 
 er = "<a><b>*<c><d>"
 
-graph_filenames = [s1, s2, s3]
+graph_servers = [s1, s2, s3]
+#resultat = c1.get_data_graph(graph_list, er, outnodes)
+list_of_local_graphs = [loadgraph(s1.graph), loadgraph(s2.graph), loadgraph(s3.graph)]
+#c1.get_server_out_nodes(s1)
 
-g = loadgraph("graph_complet2.txt")
-gblue = loadgraph("graph_blue_2.txt")
-ggreen = loadgraph("graph_green_2.txt")
-gred = loadgraph("graph_red_2.txt")
-outnodes = c1.get_all_out_nodes(graph_filenames)
-outnodes.add("blue:1")
+# Get all outnodes for each client.knownservers
+for graph in graph_servers:
+    c1.knownServers[graph.name][1]["outnodes"] = graph.get_outgoing_nodes()
 
-graph_list = [gblue, ggreen, gred]
+# Get all innodes for client.knownservers
+list_of_servers = graph_servers.copy()
+for server in c1.knownServers:
+    #print(server)
+    known_servers_temp = c1.knownServers.copy()
+    known_servers_temp.pop(server)
+    temp_in_nodes = set()
+    for temp_server in known_servers_temp:
+        for node in known_servers_temp[temp_server][1]["outnodes"]:
+            temp_in_nodes.add(node)
+    #print(temp_in_nodes)
+    current_server = list_of_servers.pop(0)
+    c1.get_innodes(current_server, temp_in_nodes)
 
-file_loader = FileSystemLoader('SPARQL-Templates')
-env = Environment(loader=file_loader)
-template = env.get_template('test1.py')
-output = template.render()
-#print(output)
+# Manually add start node to innodes
+c1.knownServers["serveur1"][2]["innodes"].add("blue:1")
 
 
-# Test case
-resultat = c1.get_data_graph(graph_list, er, outnodes)
-resultatObj = c1.get_data_graph([loadgraph(s1.graph), loadgraph(s2.graph), loadgraph(s3.graph)], er, outnodes)
+resultatObj = c1.get_data_graph(graph_servers, er)
 NFA1 = c1.get_NFA(c1.expand_re(er))
 results = bfs(resultatObj, NFA1, "blue:1")
 
 print(results[0])
-
 
 

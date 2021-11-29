@@ -48,8 +48,8 @@
       <file leaf-file-name="OOPProj.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/OOPProj.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="253">
-              <caret line="244" lean-forward="true" selection-start-line="244" selection-end-line="244" />
+            <state relative-caret-position="270">
+              <caret line="253" column="46" lean-forward="true" selection-start-line="253" selection-start-column="46" selection-end-line="253" selection-end-column="46" />
               <folding>
                 <element signature="e#0#49#0" expanded="true" />
               </folding>
@@ -82,6 +82,7 @@
       <find>get_outgoing_nodes</find>
       <find>lexer</find>
       <find>get_data_graph</find>
+      <find>list_of_local_graphs</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -523,8 +524,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/OOPProj.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="253">
-          <caret line="244" lean-forward="true" selection-start-line="244" selection-end-line="244" />
+        <state relative-caret-position="270">
+          <caret line="253" column="46" lean-forward="true" selection-start-line="253" selection-start-column="46" selection-end-line="253" selection-end-column="46" />
           <folding>
             <element signature="e#0#49#0" expanded="true" />
           </folding>

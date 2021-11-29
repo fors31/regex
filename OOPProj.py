@@ -240,6 +240,29 @@ class Client:
 
         return result_NFA
 
+    def set_servers_in_out_nodes(self, list_of_servers):
+        '''
+        Sets the all the outnodes and innodes for all the Knownservers of the Client instance with the given responses
+        :param list_of_servers: List of Serveur instances for the given Client
+        :return: None
+        '''
+        # Add all outnodes for each client.knownservers
+        for graph in list_of_servers:
+            self.knownServers[graph.name][1]["outnodes"] = graph.get_outgoing_nodes()
+
+        # Add all innodes for client.knownservers
+        list_of_servers = list_of_servers.copy()
+        for server in self.knownServers:
+            # print(server)
+            known_servers_temp = self.knownServers.copy()
+            known_servers_temp.pop(server)
+            temp_in_nodes = set()
+            for temp_server in known_servers_temp:
+                for node in known_servers_temp[temp_server][1]["outnodes"]:
+                    temp_in_nodes.add(node)
+            current_server = list_of_servers.pop(0)
+            self.get_innodes(current_server, temp_in_nodes)
+
 
 # ---- Test case ----
 
@@ -251,27 +274,8 @@ s3 = Serveur("serveur3", "red", "graph_red_2.txt")
 er = "<a><b>*<c><d>"
 
 graph_servers = [s1, s2, s3]
-#resultat = c1.get_data_graph(graph_list, er, outnodes)
-list_of_local_graphs = [loadgraph(s1.graph), loadgraph(s2.graph), loadgraph(s3.graph)]
-#c1.get_server_out_nodes(s1)
 
-# Get all outnodes for each client.knownservers
-for graph in graph_servers:
-    c1.knownServers[graph.name][1]["outnodes"] = graph.get_outgoing_nodes()
-
-# Get all innodes for client.knownservers
-list_of_servers = graph_servers.copy()
-for server in c1.knownServers:
-    #print(server)
-    known_servers_temp = c1.knownServers.copy()
-    known_servers_temp.pop(server)
-    temp_in_nodes = set()
-    for temp_server in known_servers_temp:
-        for node in known_servers_temp[temp_server][1]["outnodes"]:
-            temp_in_nodes.add(node)
-    #print(temp_in_nodes)
-    current_server = list_of_servers.pop(0)
-    c1.get_innodes(current_server, temp_in_nodes)
+c1.set_servers_in_out_nodes(graph_servers)
 
 # Manually add start node to innodes
 c1.knownServers["serveur1"][2]["innodes"].add("blue:1")

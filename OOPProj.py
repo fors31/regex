@@ -271,7 +271,7 @@ s1 = Serveur("serveur1", "blue", "graph_blue_2.txt")
 s2 = Serveur("serveur2", "green", "graph_green_2.txt")
 s3 = Serveur("serveur3", "red", "graph_red_2.txt")
 
-er = "<a><b>*<c><d>"
+regex = "<a><b>*<c><d>"
 
 graph_servers = [s1, s2, s3]
 
@@ -280,9 +280,13 @@ c1.set_servers_in_out_nodes(graph_servers)
 # Manually add start node to innodes
 c1.knownServers["serveur1"][2]["innodes"].add("blue:1")
 
+# Get local graph with all the responses
+resultatObj = c1.get_data_graph(graph_servers, regex)
 
-resultatObj = c1.get_data_graph(graph_servers, er)
-NFA1 = c1.get_NFA(c1.expand_re(er))
+# Create NFA with the expanded regex
+NFA1 = c1.get_NFA(c1.expand_re(regex))
+
+# Run query on the local graph with the expanded regex NFA
 results = bfs(resultatObj, NFA1, "blue:1")
 
 print(results[0])

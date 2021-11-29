@@ -48,8 +48,8 @@
       <file leaf-file-name="OOPProj.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/OOPProj.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="270">
-              <caret line="253" column="46" lean-forward="true" selection-start-line="253" selection-start-column="46" selection-end-line="253" selection-end-column="46" />
+            <state relative-caret-position="372">
+              <caret line="273" column="23" lean-forward="true" selection-start-line="273" selection-start-column="23" selection-end-line="273" selection-end-column="23" />
               <folding>
                 <element signature="e#0#49#0" expanded="true" />
               </folding>
@@ -495,6 +495,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="360">
           <caret line="100" column="52" lean-forward="true" selection-start-line="100" selection-start-column="52" selection-end-line="100" selection-end-column="52" />
+          <folding>
+            <element signature="e#0#40#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -524,8 +527,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/OOPProj.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="253" column="46" lean-forward="true" selection-start-line="253" selection-start-column="46" selection-end-line="253" selection-end-column="46" />
+        <state relative-caret-position="372">
+          <caret line="273" column="23" lean-forward="true" selection-start-line="273" selection-start-column="23" selection-end-line="273" selection-end-column="23" />
           <folding>
             <element signature="e#0#49#0" expanded="true" />
           </folding>

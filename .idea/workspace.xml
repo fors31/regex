@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BookmarkManager">
+    <bookmark url="file://$PROJECT_DIR$/OOPProj.py" line="278" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="160721ce-6508-4909-9705-1f56c16571b2" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/OOPProj.py" beforeDir="false" afterPath="$PROJECT_DIR$/OOPProj.py" afterDir="false" />
@@ -48,8 +51,8 @@
       <file leaf-file-name="OOPProj.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/OOPProj.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="372">
-              <caret line="273" column="23" lean-forward="true" selection-start-line="273" selection-start-column="23" selection-end-line="273" selection-end-column="23" />
+            <state relative-caret-position="310">
+              <caret line="168" column="68" lean-forward="true" selection-start-line="168" selection-start-column="68" selection-end-line="168" selection-end-column="68" />
               <folding>
                 <element signature="e#0#49#0" expanded="true" />
               </folding>
@@ -73,16 +76,18 @@
       <find>get_data_responses</find>
       <find>print</find>
       <find>get_all_out_nodes1</find>
-      <find>expand_re</find>
       <find>transit</find>
       <find>NFA</find>
       <find>get_all_out_nodes</find>
       <find>list_out_nodes</find>
-      <find>get_server_out_nodes</find>
-      <find>get_outgoing_nodes</find>
       <find>lexer</find>
-      <find>get_data_graph</find>
       <find>list_of_local_graphs</find>
+      <find>expand_re</find>
+      <find>get_outgoing_nodes</find>
+      <find>get_data_graphc1.expand_re(&quot;&lt;a&gt;&lt;b&gt;*&lt;c&gt;&lt;d&gt;&quot;)</find>
+      <find>get_data_graph</find>
+      <find>get_server_out_nodes</find>
+      <find>get_innodes</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -106,8 +111,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="180" />
-    <option name="y" value="21" />
+    <option name="x" value="194" />
+    <option name="y" value="19" />
     <option name="width" value="1531" />
     <option name="height" value="973" />
   </component>
@@ -243,7 +248,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="180" y="21" width="1531" height="973" extended-state="0" />
+    <frame x="194" y="19" width="1531" height="973" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.16543871" />
@@ -527,8 +532,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/OOPProj.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="372">
-          <caret line="273" column="23" lean-forward="true" selection-start-line="273" selection-start-column="23" selection-end-line="273" selection-end-column="23" />
+        <state relative-caret-position="310">
+          <caret line="168" column="68" lean-forward="true" selection-start-line="168" selection-start-column="68" selection-end-line="168" selection-end-column="68" />
           <folding>
             <element signature="e#0#49#0" expanded="true" />
           </folding>

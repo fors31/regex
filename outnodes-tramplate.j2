@@ -1,0 +1,1 @@
+SELECT * WHERE { ?a ?b ?c FILTER(STRSTARTS(STR(?a), "http://www.geonames.org/") && isURI(?c) && !STRSTARTS(STR(?c), "http://www.geonames.org/")) }

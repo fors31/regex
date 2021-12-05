@@ -17,6 +17,7 @@ class Serveur:
         Get all outgoing node from the server/file
         :return: a set of nodes
         '''
+        # TODO Ajouter le SPARQL pour obtenir les noeuds sortants
         g = loadgraph(self.graph)
         domain_name = list(g.keys())[0].split(":")[0]  # use the first node in the file to get the domain
         nodes_out = set()
@@ -28,7 +29,39 @@ class Serveur:
                 for value in g[key]:
                     if value[0].split(":")[0].lower() != node_in:
                         nodes_out.add(value[0])
+
+        # Ajouter machins templates SPAQRL icitte
+
         return nodes_out
+
+    def get_server_response(self, expanded_re):
+        '''
+        Returns a tuple with a data structure with responses to all the requests sent to the servers
+        and a set of not filtered nodes
+        :param expanded_re: a dict of rules {rule : start_state, end_state, regex}
+        :return: Tuple of a dict of {rule: [(origin_node, {response nodes})]} and a set of not filtered nodes
+        '''
+        # TODO Use in_nodes and expanded_re to get responses from the server
+        data_graph = dict()
+        not_filtered = set()
+        for rule in expanded_re:
+            data_graph.setdefault(rule, [])
+            for node in self.innodes:
+                sol, visited, edgelist, bc = runquery(loadgraph(self.graph), node, expanded_re[rule][2])
+
+                res_nodes = set()
+                for res_node in sol:
+                    if res_node in self.outnodes or expanded_re[rule][1].is_end:
+                        res_nodes.add(res_node)
+                        if expanded_re[rule][1].is_end:
+                            not_filtered.add(res_node)
+                if len(res_nodes) != 0:
+                    data_graph[rule].append((node, res_nodes))
+
+        # Ajouter machins templates SPAQRL icitte
+
+        return data_graph, not_filtered
+
 
 class Client:
     def __init__(self, name):
@@ -86,38 +119,16 @@ class Client:
 
         self.expanded_re = re_expanded, start_state, end_states
 
-
-    def get_data_responses(self, graph, list_in_nodes, list_out_nodes):
+    def get_data_responses(self, server):
         '''
-        Returns a tuple with a data structure with responses to all the requests sent to the servers
-        and a set of not filtered nodes
-        :param graph: graph (dict) used for the guery (use loadgraph to convert)
-        :param list_in_nodes: set of all ingoing nodes
-        :param list_out_nodes: set of all outgoing nodes
-        :return: a dict of {rule: [(origin_node, {response nodes})]}
+        Sends the query to the server object using the Serveur.get_server_response method
+        :param server: Serveur instance used to send the query
+        :return: a Tuple with dict format -> {rule : [(start_node, {set of end nodes})] and a set of not filtered nodes
         '''
-
-        data_graph = dict()
         er_list, start_state, end_states = self.expanded_re
-        not_filtered = set()
-        for node in graph:
-            if node not in list_in_nodes:
-                continue
+        response, not_filtered = server.get_server_response(er_list)
 
-            # Run a query for each rule of the expanded_re and inserts the responses in a
-            # dict format -> {rule : [(start_node, {set of end nodes})]}
-            for regex in er_list:
-                data_graph.setdefault(regex, [])
-                sol, visited, edgelist, bc = runquery(graph, node, er_list[regex][2])
-                res_nodes = set()
-                for res_node in sol:
-                    if res_node in list_out_nodes or er_list[regex][1].is_end is True:
-                        res_nodes.add(res_node)
-                        if er_list[regex][1].is_end is True:
-                            not_filtered.add(res_node)
-                if len(res_nodes) != 0:
-                    data_graph[regex].append((node, res_nodes))
-        return data_graph, not_filtered
+        return response, not_filtered
 
     def get_data_graph(self, graph_list):
         '''
@@ -128,15 +139,9 @@ class Client:
         '''
 
         # Merge all the data_responses together
-        full_result, not_filtered_nodes = self.get_data_responses(
-                                          loadgraph(graph_list[0].graph),
-                                          graph_list[0].innodes,
-                                          graph_list[0].outnodes)
+        full_result, not_filtered_nodes = self.get_data_responses(graph_list[0])
         for current_graph in graph_list[1::]:
-            partial_result, partial_not_filtered_nodes = self.get_data_responses(
-                                                         loadgraph(current_graph.graph),
-                                                         current_graph.innodes,
-                                                         current_graph.outnodes)
+            partial_result, partial_not_filtered_nodes = self.get_data_responses(current_graph)
             for not_filtered_node in partial_not_filtered_nodes:
                 not_filtered_nodes.add(not_filtered_node)
             for key in partial_result:
@@ -152,8 +157,9 @@ class Client:
                 new_graph.setdefault(node[0], list())
                 for destination in node[1]:
                     new_graph[node[0]].append((destination, key))
-        for not_filtered_node in not_filtered_nodes:  # add not filtered nodes to respect the format
+        for not_filtered_node in not_filtered_nodes:  # add not filtered nodes to respect the loadgraph format
             new_graph.setdefault(not_filtered_node, [])
+
         return new_graph
 
     def get_server_out_nodes(self, server):
@@ -225,7 +231,7 @@ class Client:
         start_state = list_of_states[0]
         list_of_states.remove(start_state)
 
-        # Get last state
+        # Get last states
         for state in list_of_states:
             if state.is_end:
                 end_state = state
@@ -293,6 +299,7 @@ class Client:
 
         # Run query on the local graph with the expanded regex NFA
         return bfs(responses, temp_NFA, self.start_node)
+
 
 # ---- Test case ----
 

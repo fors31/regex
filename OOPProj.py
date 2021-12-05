@@ -2,6 +2,8 @@ from RPQ import loadgraph, runquery, compile, bfs
 from parse import NFA, State
 from jinja2 import Environment, FileSystemLoader
 
+file_loader = FileSystemLoader("SPARQL-Templates")
+env = Environment(loader=file_loader)
 
 class Serveur:
     def __init__(self, name, domain, graph):
@@ -30,7 +32,10 @@ class Serveur:
                     if value[0].split(":")[0].lower() != node_in:
                         nodes_out.add(value[0])
 
-        # Ajouter machins templates SPAQRL icitte
+        # Print the get outnodes SPARQL request
+        template = env.get_template("outnodes-template.j2")
+        temp_render = template.render(domain=self.domain)
+        print(temp_render)
 
         return nodes_out
 

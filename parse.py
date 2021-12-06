@@ -580,7 +580,7 @@ class NFATreeNode:
 
     def __str__(self):
         if (self.isLeaf()):
-            return self.label.value
+            return "<"+self.label.value +">"
         else:
             if(self.label.name=='ALT'):
                 return "("+"|".join([str(c) for c in self.children]) +")"

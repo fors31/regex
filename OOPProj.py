@@ -1,5 +1,7 @@
 from RPQ import loadgraph, runquery, compile, bfs
 from parse import NFA, State
+from SPARQLWrapper import SPARQLWrapper, JSON
+import rdflib
 from jinja2 import Environment, FileSystemLoader
 
 file_loader = FileSystemLoader("SPARQL-Templates")
@@ -319,5 +321,16 @@ c1.initiate(graph_servers, regex, "blue:1")
 
 results = c1.run_distributed_query()
 print(results[0])
+
+
+
+
+file_loader = FileSystemLoader('SPARQL-Templates')
+env = Environment(loader=file_loader)
+template5 = env.get_template('abcdTemplate.txt')
+
+abcdtest = template5.render()
+print(abcdtest)
+
 
 

@@ -6,7 +6,8 @@ from jinja2 import Environment, FileSystemLoader
 
 file_loader = FileSystemLoader("SPARQL-Templates")
 env = Environment(loader=file_loader)
-
+template5 = env.get_template('abcdTemplate.txt')
+abcdtest = template5.render(indomain = "green", outdomains = ["red", "blue"])
 class Serveur:
     def __init__(self, name, domain, graph):
         self.name = name
@@ -66,6 +67,9 @@ class Serveur:
                     data_graph[rule].append((node, res_nodes))
 
         # Ajouter machins templates SPAQRL icitte
+        template5 = env.get_template('abcdTemplate.txt')
+        abcdtest = template5.render(indomain="green", outdomains=["red", "blue"])
+        print(abcdtest)
 
         return data_graph, not_filtered
 
@@ -322,15 +326,9 @@ c1.initiate(graph_servers, regex, "blue:1")
 results = c1.run_distributed_query()
 print(results[0])
 
-
-
-
 file_loader = FileSystemLoader('SPARQL-Templates')
 env = Environment(loader=file_loader)
-template5 = env.get_template('abcdTemplate.txt')
 
-abcdtest = template5.render()
-print(abcdtest)
 
 
 

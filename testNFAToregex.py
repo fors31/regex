@@ -27,7 +27,7 @@ def compile(p, debug = False):
 
 
 if __name__ == "__main__":
-    reg = "<a><b>*<c><d>"
+    reg = "auc/be*/chose/dee"
     print("Expression régulière:", reg)
     print("NFA:  -----    ")
     NFA1 = compile(reg)

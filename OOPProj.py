@@ -38,11 +38,7 @@ class Serveur:
         # Print the get outnodes SPARQL request
         template = env.get_template("outnodes-template.j2")
         temp_render = template.render(domain=self.domain)
-<<<<<<< HEAD
-        print(temp_render)
-=======
-        #print(temp_render)
->>>>>>> master
+
 
         return nodes_out
 
@@ -73,11 +69,6 @@ class Serveur:
         # Ajouter machins templates SPAQRL icitte
         template5 = env.get_template('abcdTemplate.txt')
         abcdtest = template5.render(indomain="green", outdomains=["red", "blue"])
-<<<<<<< HEAD
-        print(abcdtest)
-=======
-        #print(abcdtest)
->>>>>>> master
 
         return data_graph, not_filtered
 
@@ -98,47 +89,8 @@ class Client:
         :return: a dict of rule : (start state, end state, regular expression),
                  the NFA's start state and a set of all the end states
         '''
-<<<<<<< HEAD
-        compiled_regex = compile(regex)
-
         # Get a list of all the states of the original regex from the NFA
-        # Code borrowed from parse.py NFA.uglyprint()
-        states = []
-        visited, queue = set(), [compiled_regex.start]
 
-        while queue:
-            vertex = queue.pop(0)
-            if vertex not in visited:
-                visited.add(vertex)
-                transitions = set()
-                for k in vertex.transitions.keys():
-                    trans = vertex.transitions[k]
-                    states.append(trans)
-                    if trans not in visited:
-                        transitions.add(trans)
-
-                transitions.update(vertex.epsilon)
-                queue.extend([s for s in transitions if s not in visited])
-
-        # Manual decomposition of the regex using states from the original regex NFA
-        re_expanded = {"r1": (states[0], states[1], "<a><b>*"),
-                       "r2": (states[0], states[2], "<a><b>*<c>"),
-                       "r3": (states[0], states[3], "<a><b>*<c><d>"),
-                       "r4": (states[1], states[1], "<b>+"),
-                       "r5": (states[1], states[2], "<b>*<c>"),
-                       "r6": (states[1], states[3], "<b>*<c><d>"),
-                       "r7": (states[2], states[3], "<d>")}
-
-        start_state = compiled_regex.start
-
-        # Find all the end states in the NFA
-        end_states = set()
-        for state in states:
-            if state.is_end is True:
-                end_states.add(state)
-
-        self.expanded_re = re_expanded, start_state, end_states
-=======
         NFA1 = compile(regex)
         DFA = NFA1.toDFA()
         DFA.renameStates()
@@ -147,7 +99,7 @@ class Client:
         end_states = set([s for s in DFA.allReachableStates() if (s.is_end)])
         self.expanded_re = decomp2, DFA.start, end_states
 
->>>>>>> master
+
 
     def get_data_responses(self, server):
         '''
@@ -189,11 +141,11 @@ class Client:
                     new_graph[node[0]].append((destination, key))
         for not_filtered_node in not_filtered_nodes:  # add not filtered nodes to respect the loadgraph format
             new_graph.setdefault(not_filtered_node, [])
-<<<<<<< HEAD
 
-=======
+
+
         print (new_graph)
->>>>>>> master
+
         return new_graph
 
     def get_server_out_nodes(self, server):
@@ -262,11 +214,10 @@ class Client:
             state.transitions = actual_transitions
 
         # Get first state
-<<<<<<< HEAD
-        start_state = list_of_states[0]
-=======
+
+
         start_state = self.expanded_re[1]
->>>>>>> master
+
         list_of_states.remove(start_state)
 
         # Get last states
@@ -276,11 +227,8 @@ class Client:
                 list_of_states.remove(state)
 
         # Set start and end states
-<<<<<<< HEAD
-        result_NFA = NFA(start_state, end_state)
-=======
+
         result_NFA = NFA(start_state)
->>>>>>> master
 
         # Add all the states in between
         for inter_state in list_of_states:
@@ -322,10 +270,6 @@ class Client:
         '''
         self.knownServers = list_of_servers
         self.expand_re(regex)
-<<<<<<< HEAD
-=======
-        print(self.expanded_re)
->>>>>>> master
         self.start_node = start_node
 
     def run_distributed_query(self):
@@ -342,10 +286,6 @@ class Client:
 
         # Create NFA with the expanded regex
         temp_NFA = self.get_NFA()
-<<<<<<< HEAD
-=======
-        temp_NFA.uglyprint()
->>>>>>> master
 
         # Run query on the local graph with the expanded regex NFA
         return bfs(responses, temp_NFA, self.start_node)

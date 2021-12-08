@@ -4,6 +4,7 @@
 # 06-JUL-2013
 
 import pdb
+from functools import reduce
 
 class Token:
     def __init__(self, name, value):
@@ -118,12 +119,122 @@ class State:
         self.transitions = {} # char : state
         self.name = name
         self.is_end = False
+
+    def hasTransitionTo(self, state2):
+        return (state2 in self.transitions.values()) or (state2 in self.epsilon)        
+
+    def getSymbols(self): #set of symbols such that this state has outgoing transitions with these symbols
+        return list(self.transitions.keys())
+
+    def getKeysToState(self,state):
+        return [k for k in self.transitions.keys() if (self.transitions[k]==state)] + (['EPS'] if (state in self.epsilon) else [])
+
+    def getLoops(self):        
+        return self.getKeysToState(self) 
+
+    def hasLoops(self, state):
+        return len(self.getLoops())>0
+
+    def getEpsilonClosure(self):
+        closure = set()
+        queue = [self]
+        while queue:
+            vertex = queue.pop(0)
+            if vertex not in closure:
+                closure.add(vertex)
+                queue.extend([s for s in vertex.epsilon if s not in closure])                    
+        return closure #all visited states     
+
+    def removeTransitions(self,listTokens):
+        for t in listTokens:        
+            self.removeTransition(t)
+
+    def removeTransition(self,t):
+        if (t!='EPS'):
+            self.transitions.pop(t)
+
+    def removeEpsilonTransitions(self, statelist):
+        for s in statelist:
+            if(s in self.epsilon):
+                self.epsilon.remove(s)        
+            else:
+                print("info: ", s.name, "not found in", self.name,"epsilon transitions")
+
     
 class NFA:
-    def __init__(self, start, end):
+    def __init__(self, start, end=None):
         self.start = start
-        self.end = end # start and end states
-        end.is_end = True
+        if (end): #specifying an end state is optional
+            self.end = end # start and end states
+            end.is_end = True
+
+    def toDFA(self, log=False):
+        statesDict ={} # name to state in DFA
+        toNFADict = {} # state to set of corresponding states in NFA
+        def makeName(stateset): # a function to generate names for states
+            return "_".join(sorted([s.name for s in stateset]))
+        dfstartset = self.start.getEpsilonClosure()
+        startname = makeName(dfstartset)
+        dfaStart = State(startname)
+        statesDict[startname] = dfaStart
+        toNFADict[dfaStart] = dfstartset        
+        queue = [startname] # queue is name of dfa state in case we hit the same stateset again
+        visited = set()
+        while(queue):
+            dfaStateName = queue.pop(0)
+            if dfaStateName in visited:
+                continue
+            visited.add(dfaStateName)
+            # get DFA state object, and corresponding set of NFA State objects
+            dfaState = statesDict[dfaStateName]
+            nfaStates = toNFADict[dfaState]
+            # get list of symbols for outgoing transitions (from NFA)
+            symbols = list(reduce(lambda a,b,: a+b, [s.getSymbols() for s in nfaStates]))
+            for symbol in symbols:
+                NFAendStates = set()
+                for s in nfaStates:
+                    if symbol in s.transitions:
+                        NFAendStates.update(s.transitions[symbol].getEpsilonClosure())
+                endStateName = makeName(NFAendStates)
+                if ((endStateName not in queue) and (endStateName not in visited)):
+                    # create new "set" state for DFA
+                    if(log):
+                        print("==new state:", endStateName)
+                    newstate = State(endStateName)
+                    statesDict[endStateName] = newstate                            
+                    # check if it's an end state
+                    for nfs in NFAendStates:
+                        if nfs.is_end:
+                            statesDict[endStateName].is_end = True
+                            break
+                    toNFADict[newstate] = NFAendStates
+                    queue.append(endStateName)
+                endState = statesDict[endStateName]
+                # add transition from current state
+                dfaState.transitions[symbol] = endState
+        return NFA(dfaStart)
+
+    def deepCopy(self):
+        oldstateDict = {}
+        newstateDict = {}
+        for s in self.allReachableStates():
+            oldstateDict[s.name] = s    # to be able to get a state by name
+            newstateDict[s.name] = State(s.name) # new states with the same names
+        for newstate in newstateDict.values():
+            #print("copying transitions for state", newstate.name)
+            newstate.epsilon = list(map(lambda s: newstateDict[s.name], oldstateDict[newstate.name].epsilon)) #copy over the epsilon transitions
+            newstate.transitions = { ks[0]: newstateDict[ks[1].name] for ks in oldstateDict[newstate.name].transitions.items()} #copy over the epsilon transitions
+        newstart = newstateDict[self.start.name]
+        #newend = newstateDict[self.end.name]
+        return NFA(newstart)
+
+    def renameStates(self):
+        statelist=self.allReachableStates()
+        counter=0
+        for s in statelist:
+            s.name = "S_"+str(counter)
+            counter +=1
+
     
     def addstate(self, state, state_set): # add state + recursively add epsilon transitions
         if state in state_set:
@@ -132,17 +243,173 @@ class NFA:
         for eps in state.epsilon:
             self.addstate(eps, state_set)
     
+<<<<<<< HEAD
+=======
+    def getPredecessors(self, state):
+        return list(filter(lambda s:s.hasTransitionTo(state), self.allReachableStates()))
+
+    def getSuccessors(self, state):
+        return list(state.transitions.values()) + state.epsilon
+
+
+    def getInEdges(self, state):
+        alledges = []
+        for pred in self.getPredecessors(state):
+            if (pred==state):
+                continue    #skip self loops
+            trans = pred.transitions 
+            edges = [(symbol, pred) for symbol in trans if (trans[symbol]==state)]
+            if (state in pred.epsilon):
+                edges.append(('EPS', pred))
+            alledges.extend(edges)
+        return alledges
+
+    def getOutEdges(self, state):        
+        edges1 = [(k, state.transitions[k]) for k in state.transitions if state.transitions[k]!= state] 
+        return edges1 + [('EPS', s) for s in state.epsilon]
+
+    def indegree(self, state):
+        return len(self.getPredecessors(state))
+
+    def outdegree(self, state):
+        return len(self.getSuccessors(state))
+
+    def decomposePaths(self, log=False):   #TODO: we assume there's only one end state
+        statelist = self.allReachableStates()
+        decomp = {}
+        counter = 0
+        for s1 in statelist:
+            for s2 in statelist:
+                if(log):
+                    print ("----------------", s1.name, "to", s2.name)
+                nfaCopy = self.deepCopy()                
+                for s in nfaCopy.allReachableStates():
+                    s.is_end = False #existing end states are no longer end states
+                    # get copies of states s1 and s2
+                    if (s.name == s1.name):
+                        s1c = s
+                    if (s.name == s2.name):
+                        s2c = s
+                if (nfaCopy.indegree(s1c)==0): # make s1 the new start state
+                    nfaCopy.start = s1c
+                else : # if s1 has incoming edges we need to add a new start state with an epsilon-transition
+                    newstart = State("fakeStart")
+                    newstart.epsilon.append(s1c)
+                    nfaCopy.start = newstart
+        
+                if (nfaCopy.outdegree(s2c)==0): # make s2 the new end state
+                    nfaCopy.end = s2c
+                    s2c.is_end = True
+                else : # if s2 has outgoing edges we need to add a new separate end state with an epsilon-transition
+                    newend = State("fakeEnd")
+                    newend.is_end = True
+                    nfaCopy.end = newend
+                    s2c.epsilon.append(newend)
+                if(log):
+                    nfaCopy.uglyprint() # ------------- what it looks like
+                
+                # merge parallel edges (and get list of states to remove while we're at it)
+                
+                #for s in nfaCopy.allReachableStates():
+                #    for succ in nfaCopy.getSuccessors(s):
+                #        # merge all symbols as one regex with "or" symbols
+                #        allsymbols = s.getKeysToState(succ)
+                #        s.removeTransitions(allsymbols)
+                #        s.transitions[toregex(allsymbols)] = succ #TODO: if done with an NFA there is a risk of replacing an epsilon transition with a transition saying 'EPS'
+                #    if not(nfaCopy.start==s or s.is_end):
+                #        toremove.append(s)
+                
+                toremove =[]
+                for s in nfaCopy.allReachableStates():
+                    tklist = list(s.transitions.keys())
+                    for tk in tklist:
+                        s.transitions[NFATreeNode(Token('CHAR', tk))] = s.transitions[tk]
+                        s.transitions.pop(tk)
+                    if (len(s.epsilon)>1):
+                        print("WARNING: more than 1 epsilon transition in ",s.name)
+                    elif len(s.epsilon)==1:
+                        s.transitions[NFATreeNode(Token('EPS', 'eps'))] = s.epsilon[0]
+                        s.epsilon =[]
+                    if not(nfaCopy.start==s or s.is_end):
+                        toremove.append(s)
+                #now do state removal
+                if(log):
+                    print("to remove:", [s.name for s in toremove])
+                while(toremove):
+                    r=toremove.pop(0)
+                    #replace every A->R->B with A->B and concat , possibly loop with *
+                    if(log):
+                        print("removing:",r.name)
+                    inedges = nfaCopy.getInEdges(r)
+                    outedges = nfaCopy.getOutEdges(r)
+                    loops = r.getLoops()
+                    #print ("predecessors:", [p.name for p in preds], "succs:", [p.name for p in sucs])
+                    for syma,a in inedges:
+                        a.removeTransition(syma)
+                        for symb, b in outedges:
+                            nodelist = [syma]                            
+                            if (loops):
+                                loopsnode = NFATreeNode.makeBinaryAltTree(loops)
+                                loopsnode = NFATreeNode.makeUnaryNode(Token('STAR', '*'), loopsnode)
+                                nodelist.append(loopsnode)
+                            nodelist.append(symb)    
+                            newtoken = NFATreeNode.makeBinaryConcatTree(nodelist)
+                            a.transitions[newtoken]=b
+                    # merge all parallel edges
+                    for s in nfaCopy.allReachableStates():
+                        for succ in nfaCopy.getSuccessors(s):
+                            # merge all symbols as one regex with "or" symbols
+                            allsymbols = s.getKeysToState(succ)
+                            s.removeTransitions(allsymbols)
+                            newlabel = NFATreeNode.makeBinaryAltTree(allsymbols)
+                            s.transitions[newlabel] = succ 
+
+                        #print("new transition labeled", newtoken, "from", a.name, "to", b.name, "................")
+                    if(log):
+                        nfaCopy.uglyprint()
+                counter+=1
+                regexes = list(nfaCopy.start.transitions.keys())
+                if len(regexes)>0:
+                    the_regex = regexes[0]
+                    if len(regexes)>1 and log:
+                        print("Error? regexes >1 !!!:", regexes)
+                    if(log):
+                        print("regex:",the_regex)
+                    if(the_regex.label.name!='EPS'):
+                        decomp["R"+str(counter)] =(s1, s2, the_regex)
+        return decomp
+                #nfaCopy.uglyprint()
+                    
+        # Manual decomposition of the regex using states from the original regex NFA
+        '''
+        re_expanded = {"r1": (states[0], states[1], "<a><b>*"),
+                       "r2": (states[0], states[2], "<a><b>*<c>"),
+                       "r3": (states[0], states[3], "<a><b>*<c><d>"),
+                       "r4": (states[1], states[1], "<b>+"),
+                       "r5": (states[1], states[2], "<b>*<c>"),
+                       "r6": (states[1], states[3], "<b>*<c><d>"),
+                       "r7": (states[2], states[3], "<d>")}
+        '''
+>>>>>>> master
     def uglyprint(self):
         visited, queue = set(), [self.start]
         while queue:
             vertex = queue.pop(0)
+<<<<<<< HEAD
             print ("v: "+ vertex.name)
+=======
+            print ("v: "+ vertex.name + (" [start]" if vertex == self.start else "") + (" [end]" if vertex.is_end else ""))
+>>>>>>> master
             if vertex not in visited:
                 visited.add(vertex)
                 transitions = set()
                 for k in vertex.transitions.keys():
                     trans =vertex.transitions[k]
+<<<<<<< HEAD
                     print ("-" + k + '->'+ trans.name)
+=======
+                    print ("-" + str(k) + '->'+ trans.name)
+>>>>>>> master
                     if trans not in visited:
                         transitions.add(trans)
                     
@@ -150,7 +417,11 @@ class NFA:
                 for eps in vertex.epsilon:
                     print ("-eps->" + eps.name)
                     
+<<<<<<< HEAD
                 queue.extend([s for s in transitions if s not in visited])
+=======
+                queue.extend([s for s in transitions if (s not in visited) and (s not in queue)])
+>>>>>>> master
                             
         #return len(visited) #set of graph nodes in terminal nodes of product automaton; list of visited nodes                
         
@@ -179,16 +450,30 @@ class NFA:
         return False
     
     def size(self):
+<<<<<<< HEAD
+=======
+        return len(self.allReachableStates())
+
+    def allReachableStates(self):
+>>>>>>> master
         visited, queue = set(), [self.start]
         while queue:
             vertex = queue.pop(0)
             if vertex not in visited:
                 visited.add(vertex)
+<<<<<<< HEAD
                 transitions = vertex.transitions.values()
                 transitions.extend(vertex.epsilon)
                 queue.extend([s for s in transitions if s not in visited])
                     
         return len(visited) #size of automaton        
+=======
+                transitions = list(vertex.transitions.values())+vertex.epsilon
+                #transitions.extend(vertex.epsilon)
+                queue.extend([s for s in transitions if s not in visited])
+                    
+        return visited #all visited states        
+>>>>>>> master
         
         
 class Handler:
@@ -263,3 +548,111 @@ class Handler:
         n1.start.epsilon.append(n1.end)
         nfa_stack.append(n1)
 
+
+
+class NFATreeNode:
+    def __init__(self, token):
+        self.label = token
+        self.children = []
+
+    def makeBinaryAltTree(nodes):
+        return reduce(lambda left,right:NFATreeNode.makeBinaryNode(Token('ALT', '|'), left, right), nodes)
+
+    def makeBinaryConcatTree(nodes):
+        return reduce(lambda left,right:NFATreeNode.makeBinaryConcatNode(left, right), nodes)
+
+    def makeBinaryConcatNode(left, right):
+        if (left.label.name=='EPS'):
+            return right
+        if (right.label.name=='EPS'):
+            return left
+        n= NFATreeNode(Token('CONCAT','.'))
+        n.addChild(left)
+        n.addChild(right)
+        return n
+
+    def makeBinaryNode(token, left, right):
+        n= NFATreeNode(token)
+        n.addChild(left)
+        n.addChild(right)
+        return n
+
+    def makeUnaryNode(token, child):
+        n= NFATreeNode(token)
+        n.addChild(child)
+        return n
+    
+    def makeLeafNode(token,value):
+        n= NFATreeNode(token)
+        n.value = value
+        return n    
+
+    def addChild(self, node):
+        self.children.append(node)
+
+    def isLeaf(self):
+        return len(self.children)==0
+
+    def print(self):
+        self.printIndented(0)
+
+    def printIndented(self, depth):
+        print(" "*depth*2 + self.label.name)
+        if (self.isLeaf()):
+            print(" "*depth*2 +self.label.value)
+        else:
+            for c in self.children:
+                c.printIndented(depth+1)
+
+    def __str__(self):
+        if (self.isLeaf()):
+            return "<"+self.label.value +">"
+        else:
+            if(self.label.name=='ALT'):
+                return "("+"|".join([str(c) for c in self.children]) +")"
+            elif(self.label.name=='CONCAT'):
+                return "("+"".join([str(c) for c in self.children]) +")"
+            elif (self.label.name=='STAR'):
+                return str(self.children[0])+'*'
+            else:
+                return "NFATREENODE ["+self.label.name+"]("+", ".join([str(c) for c in self.children]) +")"
+
+
+#from postfix notation, build tree using stack
+class HandlerTree:
+    def __init__(self):
+        self.handlers = {'CHAR':self.handle_char, 'CONCAT':self.handle_concat,
+                         'ALT':self.handle_alt, 'STAR':self.handle_rep,
+                         'PLUS':self.handle_rep, 'QMARK':self.handle_qmark}
+        self.state_count = 0
+
+    #def create_state(self):
+    #    self.state_count += 1
+    #    return State('s' + str(self.state_count))
+    
+    def handle_char(self, t, nfa_stack):
+        nfa_stack.append(NFATreeNode.makeLeafNode(t.name, t.value))
+
+    def handle_binary(self, t, nfa_stack):
+        right = nfa_stack.pop()
+        left = nfa_stack.pop()
+        factor = NFATreeNode.makeBinaryNode(t.name, left, right)
+        nfa_stack.append(factor)
+
+    def handle_unary(self, t, nfa_stack):
+        n1 = nfa_stack.pop()
+        factor = NFATreeNode.makeUnaryNode(t.name, n1)
+        nfa_stack.append(factor)
+
+    def handle_concat(self, t, nfa_stack):
+        self.handle_binary(t, nfa_stack)
+    
+    def handle_alt(self, t, nfa_stack):
+        self.handle_binary(t, nfa_stack)
+    
+    def handle_rep(self, t, nfa_stack): 
+        self.handle_unary(t, nfa_stack)
+        # in this context it works the same as for alt (binary op)
+
+    def handle_qmark(self, t, nfa_stack): #unary op
+        self.handle_unary(self, t, nfa_stack)

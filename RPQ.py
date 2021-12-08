@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from parse import Lexer, Parser, Token, State, NFA, Handler
+=======
+from parse import Lexer, Parser, Token, State, NFA, Handler, HandlerTree, NFATreeNode
+>>>>>>> master
 from random import randrange
 import numpy as np
 from functools import reduce
@@ -38,6 +42,32 @@ def compile(p, debug = False):
     assert len(nfa_stack) == 1
     return nfa_stack.pop() 
 
+<<<<<<< HEAD
+=======
+def makeParseTree(p, debug = False):
+    
+    def print_tokens(tokens):
+        for t in tokens:
+            print(t)
+
+    lexer = Lexer(p)
+    parser = Parser(lexer)
+    tokens = parser.parse()
+
+    handler = HandlerTree()
+    
+    if debug:
+        print_tokens(tokens) 
+
+    nfa_stack = []
+    
+    for t in tokens:
+        handler.handlers[t.name](t, nfa_stack)
+    
+    assert len(nfa_stack) == 1
+    return nfa_stack.pop() 
+
+>>>>>>> master
 
 def loadgraph(gfname):
     '''
@@ -381,7 +411,11 @@ def runquery (graph, startnode, regex):
     returns answers + set of visited nodes in the graph
     '''
     NFA = compile(regex)
+<<<<<<< HEAD
     #print ("starting...")
+=======
+    print ("starting...")
+>>>>>>> master
     return bfs(graph,NFA,startnode)
 
 def runMSquery(graph,regex): #note: out of date doesn't handle broadcasts and edgelist

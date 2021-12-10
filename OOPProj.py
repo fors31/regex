@@ -1,13 +1,10 @@
 from RPQ import loadgraph, runquery, compile, bfs
-from parse import NFA, State
-from SPARQLWrapper import SPARQLWrapper, JSON
-import rdflib
+from parse import NFA
 from jinja2 import Environment, FileSystemLoader
 
 file_loader = FileSystemLoader("SPARQL-Templates")
 env = Environment(loader=file_loader)
-template5 = env.get_template('abcdTemplate.txt')
-abcdtest = template5.render(indomain = "green", outdomains = ["red", "blue"])
+
 class Serveur:
     def __init__(self, name, domain, graph):
         self.name = name
@@ -39,7 +36,6 @@ class Serveur:
         template = env.get_template("outnodes-template.j2")
         temp_render = template.render(domain=self.domain)
 
-
         return nodes_out
 
     def get_server_response(self, expanded_re):
@@ -67,11 +63,107 @@ class Serveur:
                     data_graph[rule].append((node, res_nodes))
 
         # Ajouter machins templates SPAQRL icitte
-        template5 = env.get_template('abcdTemplate.txt')
-        abcdtest = template5.render(indomain="green", outdomains=["red", "blue"])
 
         return data_graph, not_filtered
 
+
+    def prepare_query(self, rules):
+        '''
+        This function scans through a ruleset in DFA form. For every ruleset, it examines what its starting and final nodes are,
+        iteratively creating a complete and valid SPARQL query.
+        :param rules:
+        :return:
+        '''
+        domain = self.domain
+        query = "Select * where { \n"
+        entrantx = 1
+        rx = 1
+        sortantx = 1
+        ruleCounter = 0
+        finalRule = len(rules[0])
+        for r in rules[0]:
+            newSet = ("{{?entrant{entrant} http://www.w3.org/2002/07/owl#sameAs*/","{{?r{r} ")[(rules[0][r][0].name == rules[1].name)]
+            cleanRules = (rules[0][r][2]).replace("<", "").replace(">","") # Simplifies and shortens rule string
+            if(rules[0][r][1].is_end != True): # If leads into an outnode
+                end = len(cleanRules)-1 # Ruleset length
+                if (len(cleanRules) > 1):  # if rule is not a single token
+                    for char in range(len(cleanRules)):
+                        if(cleanRules[char] in ("(",")")):
+                            newSet += cleanRules[char]
+                        elif(cleanRules[char] == "|"):
+                            newSet+= "||"
+                        else:
+                            if(char != end): # Prevents error for outer boundary
+                                if(cleanRules[char+1] == "*"): # if token followed by *, no sameAs*/
+                                    newSet+= (cleanRules[char]+ " ")
+                                else:
+                                    newSet += (cleanRules[char] + " http://www.w3.org/2002/07/owl#sameAs*/")
+                else: # rule is a single token
+                    newSet += (cleanRules[0] + " http://www.w3.org/2002/07/owl#sameAs*/")
+                newSet += (" sortant{sortant} FILTER((STRSTARTS(STR(?entrant{entrant}), 'www.{domain}.com') && isURI(?sortant{sortant}) " \
+                          "&&!STRSTARTS(STR(?sortant{sortant}), 'www.{domain}.com'))) && ?entrant{entrant} IN 'www.{domain}.com'",
+                          " sortant{sortant} FILTER((STRSTARTS(STR(?r{r}),'www.{domain}.com') && isURI(?sortant{sortant})" \
+                          "&&!STRSTARTS(STR(?sortant{sortant}), 'www.{domain}.com')))")[(rules[0][r][0].name == rules[1].name)]
+            else: # If leads to final node
+                # Following while loop wants to check what the final character of the rule is. Continue until a token is found.
+                end = len(cleanRules) - 1  # Ruleset length
+                if (len(cleanRules) > 1):  # if rule is not a single token
+                    finalChar = len(cleanRules) -1
+                    finalFound = False
+                    while(finalFound == False):
+                        if (cleanRules[finalChar] in (")", "*")): # Not a token
+                            finalChar -= 1
+                        else: # Landed on a  token
+                            finalFound = True
+                    for char in range(len(cleanRules)):
+                        if(char == end): # If at the end of ruleset AND leads to final node
+                            newSet += (" FILTER(?entrant{entrant}) IN ('www.{domain}.com')", "")[(rules[0][r][0].name == rules[1].name)]
+                        elif(cleanRules[char] in ("(",")")):
+                            newSet += cleanRules[char]
+                        elif (cleanRules[char] == "|"):
+                            newSet += "||"
+                        else:
+                            newSet+= cleanRules[char] # Token found, checking next if final token
+                            if(cleanRules[char] == cleanRules[finalChar]): # Current token matches final token
+                                if (char == finalChar):  # Final token of ruleset, doesn't need followup sameAs*/
+                                    continue
+                                else:                    # Not end of ruleset, but possible end of an expression
+                                    endFound = False
+                                    spot = char
+                                    while(endFound == False):   # Until we know if this is indeed the end of the expression or just a token match
+                                        if(spot != end): # Prevents error for outer boundary
+                                            if(cleanRules[spot+1] in ("(",")","*")):
+                                                spot += 1 # Not a token, keep looking ahead
+                                            elif(cleanRules[spot+1] == "|"):
+                                                endFound = True # This is indeed the final token of the expression, doesn't need followup sameAs*/
+                                            else:
+                                                endFound = True # This is just a match, but not the end. Keep followup sameAs*/
+                                                newSet+= " http://www.w3.org/2002/07/owl#sameAs*/"
+                            else:
+                                if (char != end):  # Prevents error for outer boundary
+                                    if (cleanRules[char + 1] == "*"):  # if token followed by *, no sameAs*/
+                                        continue
+                                    else:
+                                        newSet +=" http://www.w3.org/2002/07/owl#sameAs*/"
+                else: # rule is a single token AND a final token
+                    newSet += (cleanRules[0])
+                    # If this single token rule starts from an incoming node
+                    newSet += (" FILTER(?entrant{entrant}) IN ('www.{domain}.com')", "")[(rules[0][r][0].name == rules[1].name)]
+
+            newSet = newSet.format(r=rx, sortant=sortantx, entrant=entrantx, domain=domain)
+            ruleCounter +=1
+            if(ruleCounter < finalRule):
+                newSet += "}\n UNION \n"
+            else:
+                newSet += "}"
+            query+= newSet
+            sortantx += 1
+            if(rules[0][r][0].name == rules[1].name): # Which counter to increase depending on where starts the ruleset in the tuple
+                rx += 1
+            else:
+                entrantx += 1
+        query+= "\n\n}"
+        return(query)
 
 class Client:
     def __init__(self, name):
@@ -98,6 +190,7 @@ class Client:
         decomp2 = {k: (decomp[k][0], decomp[k][1], str(decomp[k][2])) for k in decomp}
         end_states = set([s for s in DFA.allReachableStates() if (s.is_end)])
         self.expanded_re = decomp2, DFA.start, end_states
+        #print(c1.expanded_re)
 
 
 
@@ -141,10 +234,6 @@ class Client:
                     new_graph[node[0]].append((destination, key))
         for not_filtered_node in not_filtered_nodes:  # add not filtered nodes to respect the loadgraph format
             new_graph.setdefault(not_filtered_node, [])
-
-
-
-        print (new_graph)
 
         return new_graph
 
@@ -303,10 +392,12 @@ graph_servers = [s1, s2, s3]
 c1.initiate(graph_servers, regex, "blue:1")
 
 results = c1.run_distributed_query()
-print(results[0])
+#print(results[0])
+#print(c1.expanded_re)
 
-file_loader = FileSystemLoader('SPARQL-Templates')
-env = Environment(loader=file_loader)
+
+# ---- Test case SPARQL query ----
+print(s1.prepare_query(c1.expanded_re))
 
 
 

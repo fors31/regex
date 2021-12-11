@@ -5,6 +5,30 @@ from jinja2 import Environment, FileSystemLoader
 file_loader = FileSystemLoader("SPARQL-Templates")
 env = Environment(loader=file_loader)
 
+def give_prefix(string):
+    if(string == "a"):
+        return "owl:ant/"
+    elif(string == "b"):
+        return "rdfschema:bee/"
+    elif(string == "c"):
+        return "dc:chose/"
+    elif(string == "d"):
+        return "gn:deep/"
+    else:
+        return string
+
+def handle_innodes(innodes):
+    allnodes = ""
+    counter = 0
+    initLen = (len(innodes))
+    for ind in (range(len(innodes))):
+        allnodes += "<" + innodes.pop() + ">"
+        counter += 1
+        if(counter != initLen):
+            allnodes+= ","
+    return allnodes.replace("|","/")
+
+
 class Serveur:
     def __init__(self, name, domain, graph):
         self.name = name
@@ -21,15 +45,15 @@ class Serveur:
         '''
         # TODO Ajouter le SPARQL pour obtenir les noeuds sortants
         g = loadgraph(self.graph)
-        domain_name = list(g.keys())[0].split(":")[0]  # use the first node in the file to get the domain
+        domain_name = list(g.keys())[0].split("|")[0]  # use the first node in the file to get the domain
         nodes_out = set()
         node_in = domain_name.lower()
         for key in g.keys():
-            if key.split(":")[0].lower() != node_in:
+            if key.split("|")[0].lower() != node_in:
                 continue
             else:
                 for value in g[key]:
-                    if value[0].split(":")[0].lower() != node_in:
+                    if value[0].split("|")[0].lower() != node_in:
                         nodes_out.add(value[0])
 
         # Print the get outnodes SPARQL request
@@ -66,104 +90,110 @@ class Serveur:
 
         return data_graph, not_filtered
 
-
-    def prepare_query(self, rules):
+    def prepare_query2(self, rules):
         '''
         This function scans through a ruleset in DFA form. For every ruleset, it examines what its starting and final nodes are,
         iteratively creating a complete and valid SPARQL query.
         :param rules:
         :return:
         '''
-        domain = self.domain
+        domain = self.domain  # server domain name
+        innodes = handle_innodes(self.innodes) # server incoming nodes
         query = "Select * where { \n"
-        entrantx = 1
-        rx = 1
+        entrantx = 1  # counter for number of incoming nodes
+        rx = 1  # counter for rules with starting node
         sortantx = 1
-        ruleCounter = 0
-        finalRule = len(rules[0])
+        ruleCounter = 0  # counter for number of rules for number of unions to add
+        finalRule = len(rules[0])  # total number of rules given
+        dupPrevent = False  # prevent duplicate printing of predicates
+        tokenvalue = ""
         for r in rules[0]:
-            newSet = ("{{?entrant{entrant} http://www.w3.org/2002/07/owl#sameAs*/","{{?r{r} ")[(rules[0][r][0].name == rules[1].name)]
-            cleanRules = (rules[0][r][2]).replace("<", "").replace(">","") # Simplifies and shortens rule string
-            if(rules[0][r][1].is_end != True): # If leads into an outnode
-                end = len(cleanRules)-1 # Ruleset length
-                if (len(cleanRules) > 1):  # if rule is not a single token
-                    for char in range(len(cleanRules)):
-                        if(cleanRules[char] in ("(",")")):
-                            newSet += cleanRules[char]
-                        elif(cleanRules[char] == "|"):
-                            newSet+= "||"
-                        else:
-                            if(char != end): # Prevents error for outer boundary
-                                if(cleanRules[char+1] == "*"): # if token followed by *, no sameAs*/
-                                    newSet+= (cleanRules[char]+ " ")
-                                else:
-                                    newSet += (cleanRules[char] + " http://www.w3.org/2002/07/owl#sameAs*/")
-                else: # rule is a single token
-                    newSet += (cleanRules[0] + " http://www.w3.org/2002/07/owl#sameAs*/")
-                newSet += (" sortant{sortant} FILTER((STRSTARTS(STR(?entrant{entrant}), 'www.{domain}.com') && isURI(?sortant{sortant}) " \
-                          "&&!STRSTARTS(STR(?sortant{sortant}), 'www.{domain}.com'))) && ?entrant{entrant} IN 'www.{domain}.com'",
-                          " sortant{sortant} FILTER((STRSTARTS(STR(?r{r}),'www.{domain}.com') && isURI(?sortant{sortant})" \
-                          "&&!STRSTARTS(STR(?sortant{sortant}), 'www.{domain}.com')))")[(rules[0][r][0].name == rules[1].name)]
-            else: # If leads to final node
-                # Following while loop wants to check what the final character of the rule is. Continue until a token is found.
+            newSet = ("{{?entrant{entrant} ", "{{?r{r} ")[(rules[0][r][0].name == rules[1].name)]
+            cleanRules = (rules[0][r][2]).replace("<", "").replace(">", "")  # Simplifies and shortens rule string
+            if (rules[0][r][1].is_end != True):  # If leads into an outnode
                 end = len(cleanRules) - 1  # Ruleset length
-                if (len(cleanRules) > 1):  # if rule is not a single token
-                    finalChar = len(cleanRules) -1
-                    finalFound = False
-                    while(finalFound == False):
-                        if (cleanRules[finalChar] in (")", "*")): # Not a token
-                            finalChar -= 1
-                        else: # Landed on a  token
-                            finalFound = True
-                    for char in range(len(cleanRules)):
-                        if(char == end): # If at the end of ruleset AND leads to final node
-                            newSet += (" FILTER(?entrant{entrant}) IN ('www.{domain}.com')", "")[(rules[0][r][0].name == rules[1].name)]
-                        elif(cleanRules[char] in ("(",")")):
-                            newSet += cleanRules[char]
-                        elif (cleanRules[char] == "|"):
-                            newSet += "||"
-                        else:
-                            newSet+= cleanRules[char] # Token found, checking next if final token
-                            if(cleanRules[char] == cleanRules[finalChar]): # Current token matches final token
-                                if (char == finalChar):  # Final token of ruleset, doesn't need followup sameAs*/
-                                    continue
-                                else:                    # Not end of ruleset, but possible end of an expression
-                                    endFound = False
-                                    spot = char
-                                    while(endFound == False):   # Until we know if this is indeed the end of the expression or just a token match
-                                        if(spot != end): # Prevents error for outer boundary
-                                            if(cleanRules[spot+1] in ("(",")","*")):
-                                                spot += 1 # Not a token, keep looking ahead
-                                            elif(cleanRules[spot+1] == "|"):
-                                                endFound = True # This is indeed the final token of the expression, doesn't need followup sameAs*/
-                                            else:
-                                                endFound = True # This is just a match, but not the end. Keep followup sameAs*/
-                                                newSet+= " http://www.w3.org/2002/07/owl#sameAs*/"
-                            else:
-                                if (char != end):  # Prevents error for outer boundary
-                                    if (cleanRules[char + 1] == "*"):  # if token followed by *, no sameAs*/
-                                        continue
-                                    else:
-                                        newSet +=" http://www.w3.org/2002/07/owl#sameAs*/"
-                else: # rule is a single token AND a final token
-                    newSet += (cleanRules[0])
-                    # If this single token rule starts from an incoming node
-                    newSet += (" FILTER(?entrant{entrant}) IN ('www.{domain}.com')", "")[(rules[0][r][0].name == rules[1].name)]
+                tokenCount = 0
+                for char in range(len(cleanRules)):
+                    newSet += cleanRules[char]
+                    if (cleanRules[char] in ("(", ")")):  # Not a token
+                        continue
+                    # elif (cleanRules[char] == "*"):  # Is a *, does it follow a token?
+                    #     newSet += " http://www.w3.org/2002/07/owl#sameAs*/"  # Follows a token, can add followup
+                    #     dupPrevent = True
+                    elif (cleanRules[char] == "|"):  # Logical or
+                        newSet += "|"
+                    else:  # is a Token
+                        newSet = newSet[:-1]
+                        newSet += give_prefix(cleanRules[char])
+                        tokenCount += 1
+                        continue
+                # if (tokenCount == 1 and dupPrevent == False):  # Needs followup
+                #     newSet += " http://www.w3.org/2002/07/owl#sameAs*/"
+                newSet += \
+                    (" ?sortant{sortant} FILTER((STRSTARTS(STR(?entrant{entrant}),'{domain}') && isURI(?sortant{sortant}) " \
+                     "&&!STRSTARTS(STR(?sortant{sortant}),'{domain}'))) && ?entrant{entrant} IN {innodes}",
+                     " ?sortant{sortant} FILTER((STRSTARTS(STR(?r{r}),'{domain}') && isURI(?sortant{sortant})" \
+                     "&&!STRSTARTS(STR(?sortant{sortant}),'{domain}')))")[(rules[0][r][0].name == rules[1].name)]
 
-            newSet = newSet.format(r=rx, sortant=sortantx, entrant=entrantx, domain=domain)
-            ruleCounter +=1
-            if(ruleCounter < finalRule):
+            else:  # If leads to final node
+                # Following while loop wants to check what the final character of the rule is. Continue until a token is found.
+                token = "unsure"
+                end = len(cleanRules) - 1  # Ruleset length
+                tokenCount = 0
+                finalChar = len(cleanRules) - 1
+                finalFound = False
+
+                while (finalFound == False):  # Did not identify final token
+                    if (cleanRules[finalChar] in (")", "*")):  # Not a token
+                        finalChar -= 1  # Look further behind
+                    else:  # Landed on final token value
+                        finalFound = True
+                for char in range(len(cleanRules)):
+                    newSet += cleanRules[char]
+                    if (cleanRules[char] in ("(", ")")):  # Not a token
+                        continue
+                    # elif (cleanRules[char] == "*"):  # Is a *, does it follow a token?
+                    #     if (token != "final"):
+                    #         newSet += " http://www.w3.org/2002/07/owl#sameAs*/"  # Follows a non final token, can add followup
+                    elif (cleanRules[char] == "|"):
+                        newSet += "|"
+                    else:  # Token found, checking next if final token
+                        if (cleanRules[char] == cleanRules[finalChar]):  # Current token matches final token
+                            if (char == finalChar):  # Final token of ruleset, doesn't need followup sameAs*/
+                                token = "final"  # This is indeed the final token of the expression, doesn't need followup sameAs*/
+                                continue
+                            else:  # Not end of ruleset, but possible end of an expression
+                                token = "unsure"
+                                spot = char
+                                while (
+                                        token == "unsure"):  # Until we know if this is indeed the end of the expression or just a token match
+                                    if (spot != end):  # Prevents error for outer boundary
+                                        if (cleanRules[spot + 1] in ("(", ")", "*")):
+                                            spot += 1  # Not a token, keep looking ahead
+                                        elif (cleanRules[spot + 1] == "|"):
+                                            token = "final"  # This is indeed the final token of the expression, doesn't need followup sameAs*/
+                                        else:
+                                            token = "match"  # This is just a match, but not the end. Keep followup sameAs*/
+                        else:
+                            newSet = newSet[:-1]
+                            newSet += give_prefix(cleanRules[char])
+                            token = "unsure"  # reset final token flag
+                newSet += (" FILTER(?entrant{entrant}) IN ({innodes})", "")[(rules[0][r][0].name == rules[1].name)]
+            newSet = newSet.format(r=rx, sortant=sortantx, entrant=entrantx, domain=domain, innodes=innodes)
+            ruleCounter += 1
+            if (ruleCounter < finalRule):
                 newSet += "}\n UNION \n"
             else:
                 newSet += "}"
-            query+= newSet
+            query += newSet
             sortantx += 1
-            if(rules[0][r][0].name == rules[1].name): # Which counter to increase depending on where starts the ruleset in the tuple
+            if (rules[0][r][0].name == rules[
+                1].name):  # Which counter to increase depending on where starts the ruleset in the tuple
                 rx += 1
             else:
                 entrantx += 1
-        query+= "\n\n}"
-        return(query)
+        query += "\n\n}"
+        return (query)
 
 class Client:
     def __init__(self, name):
@@ -383,13 +413,13 @@ class Client:
 # ---- Test case ----
 
 c1 = Client("clientnom")
-s1 = Serveur("serveur1", "blue", "graph_blue_2.txt")
-s2 = Serveur("serveur2", "green", "graph_green_2.txt")
-s3 = Serveur("serveur3", "red", "graph_red_2.txt")
+s1 = Serveur("serveur1", "http://www.blue.com", "graph_blue_2.txt")
+s2 = Serveur("serveur2", "http://www.green.com", "graph_green_2.txt")
+s3 = Serveur("serveur3", "http://www.red.com", "graph_red_2.txt")
 regex = "<a><b>*<c><d>"
 graph_servers = [s1, s2, s3]
 
-c1.initiate(graph_servers, regex, "blue:1")
+c1.initiate(graph_servers, regex, "http://www.blue.com|1")
 
 results = c1.run_distributed_query()
 #print(results[0])
@@ -397,7 +427,8 @@ results = c1.run_distributed_query()
 
 
 # ---- Test case SPARQL query ----
-print(s1.prepare_query(c1.expanded_re))
+print(s1.prepare_query2(c1.expanded_re))
+#print(handle_innodes(s1.innodes))
 
 
 

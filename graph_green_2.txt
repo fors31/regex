@@ -1,5 +1,5 @@
-green:7 green:8 c
-green:8 green:9 d
-green:9 green:10 e
-green:7 green:10 e
-green:10 red:12 b
+http://www.green.com|7 http://www.green.com|8 c
+http://www.green.com|8 http://www.green.com|9 d
+http://www.green.com|9 http://www.green.com|10 e
+http://www.green.com|7 http://www.green.com|10 e
+http://www.green.com|10 http://www.red.com|12 b

@@ -1,2 +1,2 @@
-red:12 red:11 b
-red:11 blue:6 c
+http://www.red.com|12 http://www.red.com|11 b
+http://www.red.com|11 http://www.blue.com|6 c

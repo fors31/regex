@@ -1,0 +1,5 @@
+http://www.green.com|7 http://www.green.com|8 dc:chose/
+http://www.green.com|8 http://www.green.com|9 gn:deep/
+http://www.green.com|9 http://www.green.com|10 e
+http://www.green.com|7 http://www.green.com|10 e
+http://www.green.com|10 http://www.red.com|12 rdfschema:bee/

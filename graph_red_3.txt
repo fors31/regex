@@ -1,0 +1,2 @@
+http://www.red.com|12 http://www.red.com|11 rdfschema:bee/
+http://www.red.com|11 http://www.blue.com|6 dc:chose/

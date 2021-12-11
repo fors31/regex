@@ -5,18 +5,6 @@ from jinja2 import Environment, FileSystemLoader
 file_loader = FileSystemLoader("SPARQL-Templates")
 env = Environment(loader=file_loader)
 
-def give_prefix(string):
-    if(string == "a"):
-        return "owl:ant/"
-    elif(string == "b"):
-        return "rdfschema:bee/"
-    elif(string == "c"):
-        return "dc:chose/"
-    elif(string == "d"):
-        return "gn:deep/"
-    else:
-        return string
-
 def handle_innodes(innodes):
     allnodes = ""
     counter = 0
@@ -105,7 +93,6 @@ class Serveur:
         sortantx = 1
         ruleCounter = 0  # counter for number of rules for number of unions to add
         finalRule = len(rules[0])  # total number of rules given
-        dupPrevent = False  # prevent duplicate printing of predicates
         tokenvalue = ""
         for r in rules[0]:
             newSet = ("{{?entrant{entrant} ", "{{?r{r} ")[(rules[0][r][0].name == rules[1].name)]
@@ -117,18 +104,15 @@ class Serveur:
                     newSet += cleanRules[char]
                     if (cleanRules[char] in ("(", ")")):  # Not a token
                         continue
-                    # elif (cleanRules[char] == "*"):  # Is a *, does it follow a token?
-                    #     newSet += " http://www.w3.org/2002/07/owl#sameAs*/"  # Follows a token, can add followup
-                    #     dupPrevent = True
+                    elif (cleanRules[char] == "*"):  # Is a *, does it follow a token?
+                        if(cleanRules[char-1] == "/"):
+                            newSet = newSet[:-2]
+                            newSet += "*/"
                     elif (cleanRules[char] == "|"):  # Logical or
                         newSet += "|"
                     else:  # is a Token
-                        newSet = newSet[:-1]
-                        newSet += give_prefix(cleanRules[char])
                         tokenCount += 1
                         continue
-                # if (tokenCount == 1 and dupPrevent == False):  # Needs followup
-                #     newSet += " http://www.w3.org/2002/07/owl#sameAs*/"
                 newSet += \
                     (" ?sortant{sortant} FILTER((STRSTARTS(STR(?entrant{entrant}),'{domain}') && isURI(?sortant{sortant}) " \
                      "&&!STRSTARTS(STR(?sortant{sortant}),'{domain}'))) && ?entrant{entrant} IN {innodes}",
@@ -142,43 +126,47 @@ class Serveur:
                 tokenCount = 0
                 finalChar = len(cleanRules) - 1
                 finalFound = False
+                finalValue = ""
 
                 while (finalFound == False):  # Did not identify final token
-                    if (cleanRules[finalChar] in (")", "*")):  # Not a token
+                    if (cleanRules[finalChar] in (")", "*" , "/")):  # Not a token
                         finalChar -= 1  # Look further behind
                     else:  # Landed on final token value
                         finalFound = True
+                        finalValue = cleanRules[finalChar]
                 for char in range(len(cleanRules)):
                     newSet += cleanRules[char]
                     if (cleanRules[char] in ("(", ")")):  # Not a token
                         continue
-                    # elif (cleanRules[char] == "*"):  # Is a *, does it follow a token?
-                    #     if (token != "final"):
-                    #         newSet += " http://www.w3.org/2002/07/owl#sameAs*/"  # Follows a non final token, can add followup
+                    elif (cleanRules[char] == "/"):
+                        if(token == "final"):
+                            newSet = newSet[:-1]
+                    elif (cleanRules[char] == "*"):  # Is a *, does it follow a token?
+                        if (cleanRules[char - 1] == "/"):
+                            newSet = newSet[:-2]
+                            newSet += "*/"
                     elif (cleanRules[char] == "|"):
                         newSet += "|"
                     else:  # Token found, checking next if final token
-                        if (cleanRules[char] == cleanRules[finalChar]):  # Current token matches final token
-                            if (char == finalChar):  # Final token of ruleset, doesn't need followup sameAs*/
-                                token = "final"  # This is indeed the final token of the expression, doesn't need followup sameAs*/
+                        if (cleanRules[char] == finalValue):  # Current token matches final token
+                            if (char == finalChar):  # Final token of ruleset, doesn't need followup /
+                                token = "final"  # This is indeed the final token of the expression, doesn't need followup /
                                 continue
                             else:  # Not end of ruleset, but possible end of an expression
                                 token = "unsure"
                                 spot = char
-                                while (
-                                        token == "unsure"):  # Until we know if this is indeed the end of the expression or just a token match
+                                while (token == "unsure"):  # Until we know if this is indeed the end of the expression or just a token match
                                     if (spot != end):  # Prevents error for outer boundary
-                                        if (cleanRules[spot + 1] in ("(", ")", "*")):
+                                        if (cleanRules[spot + 1] in ("(", ")", "*", "/")):
                                             spot += 1  # Not a token, keep looking ahead
                                         elif (cleanRules[spot + 1] == "|"):
-                                            token = "final"  # This is indeed the final token of the expression, doesn't need followup sameAs*/
+                                            token = "final"  # This is indeed the final token of the expression, doesn't need followup /
                                         else:
-                                            token = "match"  # This is just a match, but not the end. Keep followup sameAs*/
+                                            token = "match"  # This is just a match, but not the end. Keep followup /
                         else:
-                            newSet = newSet[:-1]
-                            newSet += give_prefix(cleanRules[char])
                             token = "unsure"  # reset final token flag
                 newSet += (" FILTER(?entrant{entrant}) IN ({innodes})", "")[(rules[0][r][0].name == rules[1].name)]
+
             newSet = newSet.format(r=rx, sortant=sortantx, entrant=entrantx, domain=domain, innodes=innodes)
             ruleCounter += 1
             if (ruleCounter < finalRule):
@@ -413,10 +401,10 @@ class Client:
 # ---- Test case ----
 
 c1 = Client("clientnom")
-s1 = Serveur("serveur1", "http://www.blue.com", "graph_blue_2.txt")
-s2 = Serveur("serveur2", "http://www.green.com", "graph_green_2.txt")
-s3 = Serveur("serveur3", "http://www.red.com", "graph_red_2.txt")
-regex = "<a><b>*<c><d>"
+s1 = Serveur("serveur1", "http://www.blue.com", "graph_blue_3.txt")
+s2 = Serveur("serveur2", "http://www.green.com", "graph_green_3.txt")
+s3 = Serveur("serveur3", "http://www.red.com", "graph_red_3.txt")
+regex = "<owl:ant/><rdfschema:bee/>*<dc:chose/><gn:deep/>"
 graph_servers = [s1, s2, s3]
 
 c1.initiate(graph_servers, regex, "http://www.blue.com|1")
